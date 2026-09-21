@@ -121,6 +121,10 @@ const STR = {
     "set.keys": "API keys (live trading)", "set.save": "Save", "set.test": "Test connection", "set.clear": "Delete keys",
     "set.keyWarn": "Use keys with trading enabled and withdrawal DISABLED. Keys are stored in this app's private storage and only used to sign requests on your device.",
     "set.keySaved": "Keys saved", "set.keyOk": "Connection OK", "set.keyFail": "Connection failed",
+    "set.badKey": "API key එක සම්පූර්ණ නෑ — {n} අකුරු තියෙනවා, ඕන {want}. Binance එකේ Copy button එකෙන් full key එක copy කරලා paste කරන්න",
+    "set.hint.format": "Key එක සම්පූර්ණයින් copy වෙලා නෑ — Binance එකේ API Key එක ලඟ තියෙන Copy button එක ඔබලා, ආයේ paste කරන්න (64 අකුරු, spaces නැතුව)",
+    "set.hint.perm": "Key එක හරි, ඒත් permission නෑ — Binance → API Management → Edit restrictions → Enable Reading + Enable Spot & Margin Trading දෙකම tick කරලා Save කරන්න (Withdrawals OFF තියන්න)",
+    "set.hint.secret": "Secret එක වැරදියි — Secret Key එකත් Copy button එකෙන්ම copy කරලා ආයේ paste කරන්න",
     "set.noKeys": "No keys saved",
     "set.aiTitle": "AI explanation (optional)", "set.aiProv": "Provider", "set.aiModel": "Model",
     "set.aiNote": "With a key, the AI turns the indicator report into plain language. Without one, the built-in rule-based explanation is used.",
@@ -219,6 +223,10 @@ const STR = {
     "set.keys": "API යතුරු (සැබෑ වෙළඳාම)", "set.save": "සුරකින්න", "set.test": "සම්බන්ධතාව පරීක්ෂා කරන්න", "set.clear": "යතුරු මකන්න",
     "set.keyWarn": "වෙළඳාමට අවසර දී ඇති, නමුත් withdrawal අක්‍රීය කර ඇති යතුරු පමණක් භාවිතා කරන්න. යතුරු මේ app එකේ පෞද්ගලික ගබඩාවේ තබා, ඉල්ලීම් අත්සන් කිරීමට පමණක් භාවිතා කරයි.",
     "set.keySaved": "යතුරු සුරැකුණි", "set.keyOk": "සම්බන්ධතාව සාර්ථකයි", "set.keyFail": "සම්බන්ධතාව අසාර්ථකයි",
+    "set.badKey": "API key එක සම්පූර්ණ නෑ — {n} අකුරු තියෙනවා, ඕන {want}. Binance එකේ Copy button එකෙන් full key එක copy කරලා paste කරන්න",
+    "set.hint.format": "Key එක සම්පූර්ණයින් copy වෙලා නෑ — Binance එකේ API Key එක ලඟ තියෙන Copy button එක ඔබලා, ආයේ paste කරන්න (64 අකුරු, spaces නැතුව)",
+    "set.hint.perm": "Key එක හරි, ඒත් permission නෑ — Binance → API Management → Edit restrictions → Enable Reading + Enable Spot & Margin Trading දෙකම tick කරලා Save කරන්න (Withdrawals OFF තියන්න)",
+    "set.hint.secret": "Secret එක වැරදියි — Secret Key එකත් Copy button එකෙන්ම copy කරලා ආයේ paste කරන්න",
     "set.noKeys": "යතුරු සුරකා නැත",
     "set.aiTitle": "AI පැහැදිලි කිරීම (විකල්ප)", "set.aiProv": "සේවා සපයන්නා", "set.aiModel": "මාදිලිය",
     "set.aiNote": "යතුරක් තිබේ නම් AI එක දර්ශක වාර්තාව සරල භාෂාවට හරවයි. නැත්නම් ගොඩනඟා ඇති රීති මත පැහැදිලි කිරීම භාවිතා වේ.",
@@ -2154,7 +2162,13 @@ async function testKeys() {
     toast(t("set.keyOk"), "ok");
     if (state.settings.liveMode === "live") paintBalances();
   } catch (e) {
-    box.innerHTML = '<span class="dn">● ' + t("set.keyFail") + ": " + esc(e.message || "") + "</span>";
+    const raw = String(e.message || "");
+    let hint = "";
+    if (/format invalid/i.test(raw)) hint = t("set.hint.format");
+    else if (/invalid api-key|permissions|ip whitelist|-2015|-2014|-1022|restricted/i.test(raw)) hint = t("set.hint.perm");
+    else if (/signature/i.test(raw)) hint = t("set.hint.secret");
+    box.innerHTML = '<span class="dn">● ' + t("set.keyFail") + ": " + esc(raw) + "</span>" +
+      (hint ? '<div class="hint" style="margin-top:6px">💡 ' + esc(hint) + "</div>" : "");
   }
 }
 
@@ -2348,12 +2362,23 @@ function bindUI() {
     save(); paintKeyStatus();
   };
   $("setSaveKeys").onclick = () => {
-    const k = $("setKey").value.trim(), s = $("setSecret").value.trim();
-    if (!k || !s) { toast(t("set.noKeys"), "bad"); return; }
-    const r = bc(liveEx() + "SaveKeys", k, s, state.settings.testnet);
+    /* paste hygiene: keyboards/line-wraps inject spaces & newlines — strip them all */
+    const k = ($("setKey").value || "").replace(/\s+/g, "");
+    const sec = ($("setSecret").value || "").replace(/\s+/g, "");
+    $("setKey").value = k; $("setSecret").value = sec;
+    if (!k || !sec) { toast(t("set.noKeys"), "bad"); return; }
+    const want = liveEx() === "bybit" ? "16–80" : "64";
+    const okLen = liveEx() === "bybit" ? (k.length >= 16 && k.length <= 80) : (k.length === 64 && /^[A-Za-z0-9]+$/.test(k));
+    if (!okLen) {
+      $("setKeyStatus").innerHTML = '<span class="dn">● ' + t("set.badKey").replace("{n}", String(k.length)).replace("{want}", want) + "</span>";
+      toast("❌ " + t("set.badKey").replace("{n}", String(k.length)).replace("{want}", want), "bad");
+      return;
+    }
+    const r = bc(liveEx() + "SaveKeys", k, sec, state.settings.testnet);
     if (r == null) { toast(t("live.unsupported"), "bad"); return; }
     $("setKey").value = ""; $("setSecret").value = "";
-    toast(t("set.keySaved"), "ok"); paintKeyStatus();
+    toast(t("set.keySaved") + " · " + k.slice(0, 4) + "…" + k.slice(-4) + " (" + k.length + ")", "ok");
+    paintKeyStatus();
   };
   $("setTestKeys").onclick = testKeys;
   $("setClearKeys").onclick = () => {
