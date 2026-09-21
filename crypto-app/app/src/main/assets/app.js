@@ -64,6 +64,8 @@ const STR = {
     "bot24.batbody": "Android battery optimization can stop the 24/7 background engine.<br><br>Allow <b>Unrestricted</b> battery so the bot can keep buying & selling while the app is closed?",
     "bot24.batok": "🔋 battery: unrestricted ✓", "bot24.batbad": "🔋 battery: restricted — tap fix",
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. Trades & TP/SL still fire notifications while you are away.",
+    "mp.mode": "Exit mode", "mp.classic": "Classic (TP/SL)", "mp.minprofit": "✅ Sell at ANY profit — never at a loss", "mp.min": "Min profit (USDT, net of fees)",
+    "mp.done": "Profit taken ✅", "mp.warn": "⚠️ SL is OFF in this mode: a losing trade is HELD until it recovers to ≥ min profit, then sold. If the market keeps falling the position can stay open for days — higher win-rate, less risk control. Use money you can leave in the market.",
     "conn.live": "live", "conn.demo": "demo data", "conn.off": "offline", "conn.loading": "loading…",
     "sort.vol": "🔥 Top volume", "sort.gain": "📈 Gainers", "sort.loss": "📉 Losers", "sort.fav": "★ Watchlist",
     "demo.note": "⚠ No exchange connection — showing simulated demo data. Signals & bot work, prices are not real.",
@@ -156,6 +158,8 @@ const STR = {
     "bot24.batbody": "Android battery optimization එකෙන් 24/7 background engine එක නවතින්න පුළුවන්.<br><br>App එක close වෙලා හිටපුවත් bot එකට buy/sell කරන්න <b>Unrestricted</b> battery allow කරන්නද?",
     "bot24.batok": "🔋 battery: unrestricted ✓", "bot24.batbad": "🔋 battery: restricted — fix කරන්න",
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. ඔයා ඈත හිටියත් trades & TP/SL notifications එනවා.",
+    "mp.mode": "ඉවත්වීමේ ක්‍රමය", "mp.classic": "සම්භාව්‍ය (TP/SL)", "mp.minprofit": "✅ සතයක් හරි ලාභයි නම් sell — loss වෙලා විකුණන්නේ නෑ", "mp.min": "අවම ලාභය (USDT, fees අඩුවෙලා)",
+    "mp.done": "ලාභය අරගත්තා ✅", "mp.warn": "⚠️ මේ mode එකේ SL වැඩ නෑ — loss වෙච්ච trade එක, ආයේත් ලාභ වෙනකම් hold කරලා ඉන්පස්සේ sell වෙනවා. Market එක දිගටම වැටුණොත් position එක දවස් ගානක් open වෙලා තියෙන්න පුළුවන් — win-rate වැඩි නමුත් risk control අඩුයි. Market එකේ තියාගන්න පුළුවන් සල්ලි විතරක් පාවිච්චි කරන්න.",
     "conn.live": "සජීවී", "conn.demo": "නියැදි දත්ත", "conn.off": "නොබැඳි", "conn.loading": "පූරණය…",
     "sort.vol": "🔥 වැඩිම පරිමාව", "sort.gain": "📈 ඉහළ ගිය", "sort.loss": "📉 පහළ ගිය", "sort.fav": "★ මගේ ලැයිස්තුව",
     "demo.note": "⚠ හුවමාරු සම්බන්ධතාවක් නැත — නියැදි (demo) දත්ත පෙන්වයි. සංඥා සහ රොබෝ වැඩ කරයි, මිල සැබෑ නොවේ.",
@@ -309,7 +313,7 @@ function load() {
     if (s.paper) state.paper = s.paper;
     if (s.alerts) state.alerts = s.alerts;
     if (s.chartInd) Object.assign(state.chartInd, s.chartInd);
-    if (s.botCfg) state.botCfg = s.botCfg;
+    if (s.botCfg) state.botCfg = Object.assign(botCfg(), s.botCfg);
   } catch (e) { console.warn("load", e); }
 }
 function freshPaper() {
@@ -319,6 +323,7 @@ function botCfg() {
   return state.botCfg || (state.botCfg = {
     strategy: "signal", tf: "15m", size: 50, tp: 1.5, sl: 0.8, symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
     allowShort: false, notify: true, keep: false, maxPos: 3, cooldown: 15, dailyLoss: 50,
+    exitMode: "minprofit", minProfit: 0.01,   /* 24/7: sell at ANY net profit, never at a loss */
   });
 }
 
@@ -1278,6 +1283,14 @@ function renderAll() {
  * PAPER TRADING ENGINE (spot semantics for longs, bot can also short)
  * ========================================================================== */
 const FEE_RATE = 0.001;                       // 0.10% per side (taker)
+
+/* net PnL of a position at `price`, including open+close taker fees */
+function posNetPnl(pos, price) {
+  const dir = pos.dir || 1;
+  const gross = (price - pos.entry) * pos.qty * dir;
+  const fees = (pos.qty * pos.entry + pos.qty * price) * FEE_RATE;
+  return gross - fees;
+}
 function paper() {
   if (!state.paper) state.paper = freshPaper();
   const p = state.paper;
@@ -1343,6 +1356,20 @@ function closePaperAll(sym, price, reason) {
 }
 function checkPaperPositions(sym, price) {
   const p = paper();
+  /* —— "සතයක් හරි" profit-exit: sell at ≥ min net profit, NEVER sell at a loss —— */
+  if (botCfg().exitMode === "minprofit") {
+    const mp = Math.max(0.01, Number(botCfg().minProfit) || 0.01);
+    p.positions.filter((x) => x.sym === sym).slice().forEach((pos) => {
+      const np = posNetPnl(pos, price);
+      if (np >= mp) {
+        const r = closePaper(pos.id, price, "profit");
+        notify(t("mp.done"), `${pos.sym.replace("USDT", "/USDT")} ✅ +${fmtUsd(np)} (${pos.dir > 0 ? "long" : "short"} · held ${ago(pos.ts)})`, "ok");
+        paintTrade(); paintBotStats();
+      }
+      /* loss → hold for recovery; SL is intentionally disabled in this mode */
+    });
+    return;
+  }
   p.positions.filter((x) => x.sym === sym).forEach((pos) => {
     if (pos.tp && ((pos.dir > 0 && price >= pos.tp) || (pos.dir < 0 && price <= pos.tp))) {
       const r = closePaper(pos.id, pos.tp, "TP");
@@ -1788,11 +1815,19 @@ async function botEvalSymbol(sym, cfg) {
 
   // exits on a flip
   if (bias <= 0 && held.length && held[0].dir > 0) {
+    if (cfg.exitMode === "minprofit" && posNetPnl(held[0], price) < (cfg.minProfit || 0.01)) {
+      logLine(sym + " flip — hold for profit recovery (" + fmtUsd(posNetPnl(held[0], price)) + ")", "warn");
+      return;
+    }
     const r = closePaper(held[0].id, price, "flip");
     notify(t("trade.closed"), `${sym.replace("USDT", "/USDT")} long closed · ${fmtUsd(r.pnl)}`, r.pnl >= 0 ? "ok" : "bad");
     return;
   }
   if (bias >= 0 && held.length && held[0].dir < 0) {
+    if (cfg.exitMode === "minprofit" && posNetPnl(held[0], price) < (cfg.minProfit || 0.01)) {
+      logLine(sym + " flip — hold for profit recovery (" + fmtUsd(posNetPnl(held[0], price)) + ")", "warn");
+      return;
+    }
     const r = closePaper(held[0].id, price, "flip");
     notify(t("trade.closed"), `${sym.replace("USDT", "/USDT")} short closed · ${fmtUsd(r.pnl)}`, r.pnl >= 0 ? "ok" : "bad");
     return;
@@ -1829,9 +1864,21 @@ async function botEvalSymbol(sym, cfg) {
 }
 
 function botOnTick(sym, price) {
-  const b = bot();
+  const b = bot(), cfg = botCfg();
   if (!b.running || !b.livePos || !b.livePos.length) return;
   b.livePos.filter((x) => x.sym === sym).forEach(async (p) => {
+    /* —— minprofit mode: sell live only at ≥ min net profit, never at a loss —— */
+    if (cfg.exitMode === "minprofit") {
+      const np = posNetPnl(p, price);
+      if (np < Math.max(0.01, Number(cfg.minProfit) || 0.01)) return;
+      try {
+        await livePlaceOrder(sym, "SELL", p.qty, price, "MARKET");
+        notify(t("mp.done"), `LIVE SELL ${fmtQty(p.qty)} ${sym.replace("USDT", "/USDT")} @ ${fmtPrice(price)} · +${fmtUsd(np)}`, "ok");
+        logLine(`live profit-exit ${sym} @ ${fmtPrice(price)} +${fmtUsd(np)}`, "ok");
+        b.livePos = b.livePos.filter((x) => x !== p);
+      } catch (e) { logLine("live close failed: " + e.message, "bad"); }
+      return;
+    }
     if (price >= p.tp || price <= p.sl) {
       try {
         await livePlaceOrder(sym, "SELL", p.qty, price, "MARKET");
@@ -1936,6 +1983,12 @@ function paintBot() {
   $("bMaxPos").value = cfg.maxPos;
   $("bCool").value = cfg.cooldown;
   $("bDaily").value = cfg.dailyLoss;
+  const exSel = $("bExit");
+  if (exSel) exSel.value = cfg.exitMode === "minprofit" ? "minprofit" : "classic";
+  const mpIn = $("bMinP");
+  if (mpIn) mpIn.value = (cfg.minProfit != null ? cfg.minProfit : 0.01);
+  const mpw = $("mpWarn");
+  if (mpw) { mpw.textContent = t("mp.warn"); mpw.style.display = cfg.exitMode === "minprofit" ? "block" : "none"; }
   $("bShort").classList.toggle("on", !!cfg.allowShort);
   $("bNotify").classList.toggle("on", !!cfg.notify);
   $("bKeep").classList.toggle("on", !!cfg.keep);
@@ -2183,6 +2236,11 @@ function bindUI() {
   $("botStart").onclick = botStart;
   $("botStop").onclick = botStop;
   $("botClear").onclick = () => { bot().log = []; paintBot(); };
+  // profit-exit mode ("සතයක් හරි")
+  const bExit = $("bExit");
+  if (bExit) bExit.onchange = () => { botCfg().exitMode = bExit.value; save(); paintBot(); };
+  const bMinP = $("bMinP");
+  if (bMinP) bMinP.onchange = () => { botCfg().minProfit = Math.max(0.01, Number(bMinP.value) || 0.01); save(); paintBot(); };
   // 24/7 card
   const batFix = $("btBatFix");
   if (batFix) batFix.onclick = () => bc("requestBatteryExemption");
