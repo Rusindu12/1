@@ -34,7 +34,7 @@ Every push that touches `crypto-app/**` builds a debug APK via GitHub Actions:
 | 🕯️ **Chart** | last 140 candles, EMA 20/50, Bollinger, volume, RSI(14) panel, drag to inspect, timeframe 1m…1d |
 | 🎯 **Signal** | blended verdict (STRONG BUY … STRONG SELL) with confidence, trend vs oscillator blocks, reasons, 12 indicator metrics, ATR-based entry/target/stop, 500-candle backtest, optional AI explanation |
 | 💱 **Trade** | paper mode (10,000 USDT, 0.1% fee, long/short, TP/SL, limit orders, history) and live mode (Binance/Bybit spot, keys signed on-device) |
-| 🤖 **Bot** | 4 strategies (AI signal / trend / reversion / breakout), multi-symbol, TP/SL, max positions, cooldown, daily-loss stop, activity log, notifications |
+| 🤖 **Bot** | 4 strategies, multi-symbol, profit-exit mode ("sell at ANY profit, never at a loss"), daily profit target, auto-DCA recovery, crash guard, TP/SL, risk limits, 24/7 background engine |
 | 🖥️ **System** | **Real-time activity engine** — Process / Memory / Device / File / Security / Network management (සියල්ලම live) |
 
 Notes:

@@ -65,7 +65,11 @@ const STR = {
     "bot24.batok": "🔋 battery: unrestricted ✓", "bot24.batbad": "🔋 battery: restricted — tap fix",
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. Trades & TP/SL still fire notifications while you are away.",
     "mp.mode": "Exit mode", "mp.classic": "Classic (TP/SL)", "mp.minprofit": "✅ Sell at ANY profit — never at a loss", "mp.min": "Min profit (USDT, net of fees)",
-    "mp.done": "Profit taken ✅", "mp.warn": "⚠️ SL is OFF in this mode: a losing trade is HELD until it recovers to ≥ min profit, then sold. If the market keeps falling the position can stay open for days — higher win-rate, less risk control. Use money you can leave in the market.",
+    "mp.done": "Profit taken ✅",
+    "mp.target": "🎯 Daily profit target reached — bot resting", "mp.dca": "Auto-DCA · averaging down",
+    "mp.volskip": "Crash guard — entry skipped", "mp.brake": "Emergency exit (max hold)",
+    "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
+    "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.dcaDrop": "DCA drop %", "bot.dcaMax": "DCA max buys", "bot.volDrop": "Crash drop %", "mp.warn": "⚠️ SL is OFF in this mode: a losing trade is HELD until it recovers to ≥ min profit, then sold. If the market keeps falling the position can stay open for days — higher win-rate, less risk control. Use money you can leave in the market.",
     "conn.live": "live", "conn.demo": "demo data", "conn.off": "offline", "conn.loading": "loading…",
     "sort.vol": "🔥 Top volume", "sort.gain": "📈 Gainers", "sort.loss": "📉 Losers", "sort.fav": "★ Watchlist",
     "demo.note": "⚠ No exchange connection — showing simulated demo data. Signals & bot work, prices are not real.",
@@ -159,7 +163,11 @@ const STR = {
     "bot24.batok": "🔋 battery: unrestricted ✓", "bot24.batbad": "🔋 battery: restricted — fix කරන්න",
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. ඔයා ඈත හිටියත් trades & TP/SL notifications එනවා.",
     "mp.mode": "ඉවත්වීමේ ක්‍රමය", "mp.classic": "සම්භාව්‍ය (TP/SL)", "mp.minprofit": "✅ සතයක් හරි ලාභයි නම් sell — loss වෙලා විකුණන්නේ නෑ", "mp.min": "අවම ලාභය (USDT, fees අඩුවෙලා)",
-    "mp.done": "ලාභය අරගත්තා ✅", "mp.warn": "⚠️ මේ mode එකේ SL වැඩ නෑ — loss වෙච්ච trade එක, ආයේත් ලාභ වෙනකම් hold කරලා ඉන්පස්සේ sell වෙනවා. Market එක දිගටම වැටුණොත් position එක දවස් ගානක් open වෙලා තියෙන්න පුළුවන් — win-rate වැඩි නමුත් risk control අඩුයි. Market එකේ තියාගන්න පුළුවන් සල්ලි විතරක් පාවිච්චි කරන්න.",
+    "mp.done": "ලාභය අරගත්තා ✅",
+    "mp.target": "🎯 දෛනික ඉලක්කය ලැබුණා — bot එක අදට විවේකයි", "mp.dca": "Auto-DCA · average අඩු කරනවා",
+    "mp.volskip": "Crash guard — entry එක skip කළා", "mp.brake": "හදිසි පිටවීම (max hold)",
+    "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
+    "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.dcaDrop": "DCA පහළවීම %", "bot.dcaMax": "DCA ගැනීම් ගණන", "bot.volDrop": "Crash %", "mp.warn": "⚠️ මේ mode එකේ SL වැඩ නෑ — loss වෙච්ච trade එක, ආයේත් ලාභ වෙනකම් hold කරලා ඉන්පස්සේ sell වෙනවා. Market එක දිගටම වැටුණොත් position එක දවස් ගානක් open වෙලා තියෙන්න පුළුවන් — win-rate වැඩි නමුත් risk control අඩුයි. Market එකේ තියාගන්න පුළුවන් සල්ලි විතරක් පාවිච්චි කරන්න.",
     "conn.live": "සජීවී", "conn.demo": "නියැදි දත්ත", "conn.off": "නොබැඳි", "conn.loading": "පූරණය…",
     "sort.vol": "🔥 වැඩිම පරිමාව", "sort.gain": "📈 ඉහළ ගිය", "sort.loss": "📉 පහළ ගිය", "sort.fav": "★ මගේ ලැයිස්තුව",
     "demo.note": "⚠ හුවමාරු සම්බන්ධතාවක් නැත — නියැදි (demo) දත්ත පෙන්වයි. සංඥා සහ රොබෝ වැඩ කරයි, මිල සැබෑ නොවේ.",
@@ -324,6 +332,9 @@ function botCfg() {
     strategy: "signal", tf: "15m", size: 50, tp: 1.5, sl: 0.8, symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
     allowShort: false, notify: true, keep: false, maxPos: 3, cooldown: 15, dailyLoss: 50,
     exitMode: "minprofit", minProfit: 0.01,   /* 24/7: sell at ANY net profit, never at a loss */
+    dayTarget: 0, maxHoldDays: 0, maxHoldLoss: 25,      /* discipline + emergency brake (0 = off) */
+    dca: false, dcaDrop: 3, dcaMax: 1,                  /* auto-DCA recovery booster */
+    volGuard: true, volDrop: 5,                         /* skip entries while a coin is crashing */
   });
 }
 
@@ -1361,9 +1372,17 @@ function checkPaperPositions(sym, price) {
     const mp = Math.max(0.01, Number(botCfg().minProfit) || 0.01);
     p.positions.filter((x) => x.sym === sym).slice().forEach((pos) => {
       const np = posNetPnl(pos, price);
-      if (np >= mp) {
-        const r = closePaper(pos.id, price, "profit");
-        notify(t("mp.done"), `${pos.sym.replace("USDT", "/USDT")} ✅ +${fmtUsd(np)} (${pos.dir > 0 ? "long" : "short"} · held ${ago(pos.ts)})`, "ok");
+      const heldDays = (now() - pos.ts) / 86400000;
+      const brakeOn = botCfg().maxHoldDays > 0 && heldDays > botCfg().maxHoldDays &&
+        np <= -(Math.abs(botCfg().maxHoldLoss) / 100) * (pos.qty * pos.entry);
+      if (np >= mp || brakeOn) {
+        const r = closePaper(pos.id, price, brakeOn ? "brake" : "profit");
+        if (brakeOn) {
+          notify("🛑 " + t("mp.brake"), `${pos.sym.replace("USDT", "/USDT")} ${heldDays.toFixed(1)}d · ${fmtUsd(np)}`, "bad");
+          logLine(`emergency brake ${pos.sym} — held ${heldDays.toFixed(1)} days, loss ${fmtUsd(np)}`, "bad");
+        } else {
+          notify(t("mp.done"), `${pos.sym.replace("USDT", "/USDT")} ✅ +${fmtUsd(np)} (${pos.dir > 0 ? "long" : "short"} · held ${ago(pos.ts)})`, "ok");
+        }
         paintTrade(); paintBotStats();
       }
       /* loss → hold for recovery; SL is intentionally disabled in this mode */
@@ -1785,6 +1804,13 @@ async function botTick() {
     botStop();
     return;
   }
+  /* —— daily profit target: take the win and rest for the day —— */
+  if (cfg.dayTarget > 0 && lossSinceStart >= cfg.dayTarget) {
+    logLine(t("mp.target") + " (" + fmtUsd(lossSinceStart) + ")", "ok");
+    notify(t("mp.target"), fmtUsd(lossSinceStart) + " · " + cfg.symbols.length + " pairs", "ok");
+    botStop();
+    return;
+  }
   for (const sym of cfg.symbols) {
     try { await botEvalSymbol(sym, cfg); } catch (e) { logLine(sym + ": " + (e.message || e), "bad"); }
   }
@@ -1834,11 +1860,33 @@ async function botEvalSymbol(sym, cfg) {
   }
   if (!bias) return;
 
+  /* —— auto-DCA: average down while a bot position is deep in loss (recovery booster) —— */
+  if (cfg.dca && held.length && held[0].dir > 0 && cfg.exitMode === "minprofit") {
+    const hp = held[0];
+    const dropPct = ((price - hp.entry) / hp.entry) * 100;
+    const dcaCount = paper().positions.filter((x) => x.src === "bot-dca").length;
+    if (dropPct <= -Math.abs(cfg.dcaDrop) && dcaCount < (cfg.dcaMax || 1) && price < hp.entry) {
+      const r = openPaper(sym, price, cfg.size, 0, 0, "bot-dca", 1);
+      if (!r.error) {
+        b.lastEntry[sym] = now();
+        notify(t("mp.dca"), `${sym.replace("USDT", "/USDT")} avg down @ ${fmtPrice(price)} · ${dropPct.toFixed(1)}%`, "");
+        logLine(`DCA ${sym} @ ${fmtPrice(price)} (${dropPct.toFixed(1)}% below entry) — recovery distance shortened`, "ai");
+      }
+      return;
+    }
+  }
+
   // entry guards
   const cool = (b.lastEntry[sym] || 0) + cfg.cooldown * 60000;
   if (now() < cool) return;
   const openCount = paper().positions.filter((x) => x.src === "bot").length;
   if (openCount >= cfg.maxPos) { logLine("max positions reached (" + cfg.maxPos + ")", "warn"); return; }
+  /* —— crash guard: don't catch falling knives —— */
+  const tk = state.tickers[sym];
+  if (cfg.volGuard !== false && tk && Number(tk.chg) <= -Math.abs(cfg.volDrop || 5)) {
+    logLine(t("mp.volskip") + " (" + sym + " " + fmtPct(tk.chg) + ")", "warn");
+    return;
+  }
 
   if (state.settings.liveMode === "live" && canTradeLive()) {
     if (bias < 0) { logLine("spot live mode is long-only — short skipped", "warn"); return; }
@@ -1983,6 +2031,12 @@ function paintBot() {
   $("bMaxPos").value = cfg.maxPos;
   $("bCool").value = cfg.cooldown;
   $("bDaily").value = cfg.dailyLoss;
+  [["bDayT", "dayTarget"], ["bMaxHold", "maxHoldDays"], ["bMaxLoss", "maxHoldLoss"],
+    ["bDcaDrop", "dcaDrop"], ["bDcaMax", "dcaMax"], ["bVolDrop", "volDrop"]].forEach(([id, k]) => {
+    const n = $(id); if (n) n.value = (cfg[k] != null ? cfg[k] : 0);
+  });
+  const bDca = $("bDca"); if (bDca) bDca.classList.toggle("on", !!cfg.dca);
+  const bVol = $("bVol"); if (bVol) bVol.classList.toggle("on", cfg.volGuard !== false);
   const exSel = $("bExit");
   if (exSel) exSel.value = cfg.exitMode === "minprofit" ? "minprofit" : "classic";
   const mpIn = $("bMinP");
@@ -2224,9 +2278,13 @@ function bindUI() {
   // bot
   $("bStrat").onchange = (e) => { botCfg().strategy = e.target.value; save(); paintBot(); };
   $("bTf").onchange = (e) => { botCfg().tf = e.target.value; save(); };
-  [["bSize", "size"], ["bTp", "tp"], ["bSl", "sl"], ["bMaxPos", "maxPos"], ["bCool", "cooldown"], ["bDaily", "dailyLoss"]].forEach(([id, k]) => {
+  [["bSize", "size"], ["bTp", "tp"], ["bSl", "sl"], ["bMaxPos", "maxPos"], ["bCool", "cooldown"], ["bDaily", "dailyLoss"],
+    ["bDayT", "dayTarget"], ["bMaxHold", "maxHoldDays"], ["bMaxLoss", "maxHoldLoss"],
+    ["bDcaDrop", "dcaDrop"], ["bDcaMax", "dcaMax"], ["bVolDrop", "volDrop"]].forEach(([id, k]) => {
     $(id).onchange = (e) => { botCfg()[k] = parseFloat(e.target.value) || 0; save(); };
   });
+  const bDca2 = $("bDca"); if (bDca2) bDca2.onclick = () => { botCfg().dca = !botCfg().dca; save(); paintBot(); };
+  const bVol2 = $("bVol"); if (bVol2) bVol2.onclick = () => { botCfg().volGuard = !(botCfg().volGuard !== false); save(); paintBot(); };
   const sws = [["bShort", "allowShort"], ["bNotify", "notify"], ["bKeep", "keep"]];
   sws.forEach(([id, k]) => $(id).onclick = () => {
     const cfg = botCfg(); cfg[k] = !cfg[k];

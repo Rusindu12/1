@@ -440,6 +440,20 @@ nav .nb{position:absolute;top:4px;right:calc(50% - 22px);min-width:15px;height:1
           <label class="f" style="margin:0"><span class="lb" data-i18n="mp.min">Min profit (USDT, net of fees)</span><input id="bMinP" type="number" step="0.01" min="0.01" value="0.01"></label>
         </div>
         <div class="hint mt" id="mpWarn" style="display:none"></div>
+        <div class="grid2 mt">
+          <label class="f" style="margin:0"><span class="lb" data-i18n="bot.dayT">Daily profit target USDT (0 = off)</span><input id="bDayT" type="number" step="0.5" min="0" value="0"></label>
+          <label class="f" style="margin:0"><span class="lb" data-i18n="bot.maxHold">Max hold days (0 = off)</span><input id="bMaxHold" type="number" step="1" min="0" value="0"></label>
+        </div>
+        <div class="row mt" style="gap:6px;flex-wrap:wrap">
+          <button class="chip" id="bDca" data-i18n="bot.dca">Auto-DCA</button>
+          <button class="chip on" id="bVol" data-i18n="bot.vol">Crash guard</button>
+        </div>
+        <div class="grid3 mt">
+          <label class="f" style="margin:0"><span class="lb" data-i18n="bot.dcaDrop">DCA drop %</span><input id="bDcaDrop" type="number" step="0.5" min="0.5" value="3"></label>
+          <label class="f" style="margin:0"><span class="lb" data-i18n="bot.dcaMax">DCA max buys</span><input id="bDcaMax" type="number" step="1" min="1" max="5" value="1"></label>
+          <label class="f" style="margin:0"><span class="lb" data-i18n="bot.volDrop">Crash drop %</span><input id="bVolDrop" type="number" step="1" min="2" value="5"></label>
+        </div>
+        <label class="f mt" style="margin:0"><span class="lb" data-i18n="bot.maxLoss">Brake loss %</span><input id="bMaxLoss" type="number" step="5" min="5" value="25"></label>
       </div>
       <div class="card">
         <h3 id="lblSym" data-i18n="bot.symbols">Symbols</h3>
