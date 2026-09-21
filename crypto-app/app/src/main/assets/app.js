@@ -68,7 +68,7 @@ const STR = {
     "mp.done": "Profit taken ✅",
     "mp.target": "🎯 Daily profit target reached — bot resting", "mp.dca": "Auto-DCA · averaging down",
     "mp.volskip": "Crash guard — entry skipped", "mp.brake": "Emergency exit (max hold)",
-    "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
+    "bot.entry": "Entry strength (signal score 5–40; lower = more trades)", "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
     "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.dcaDrop": "DCA drop %", "bot.dcaMax": "DCA max buys", "bot.volDrop": "Crash drop %", "mp.warn": "⚠️ SL is OFF in this mode: a losing trade is HELD until it recovers to ≥ min profit, then sold. If the market keeps falling the position can stay open for days — higher win-rate, less risk control. Use money you can leave in the market.",
     "conn.live": "live", "conn.demo": "demo data", "conn.off": "offline", "conn.loading": "loading…",
     "sort.vol": "🔥 Top volume", "sort.gain": "📈 Gainers", "sort.loss": "📉 Losers", "sort.fav": "★ Watchlist",
@@ -166,7 +166,7 @@ const STR = {
     "mp.done": "ලාභය අරගත්තා ✅",
     "mp.target": "🎯 දෛනික ඉලක්කය ලැබුණා — bot එක අදට විවේකයි", "mp.dca": "Auto-DCA · average අඩු කරනවා",
     "mp.volskip": "Crash guard — entry එක skip කළා", "mp.brake": "හදිසි පිටවීම (max hold)",
-    "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
+    "bot.entry": "Entry ශක්තිය (score 5–40; අඩු නම් trades වැඩියි)", "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
     "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.dcaDrop": "DCA පහළවීම %", "bot.dcaMax": "DCA ගැනීම් ගණන", "bot.volDrop": "Crash %", "mp.warn": "⚠️ මේ mode එකේ SL වැඩ නෑ — loss වෙච්ච trade එක, ආයේත් ලාභ වෙනකම් hold කරලා ඉන්පස්සේ sell වෙනවා. Market එක දිගටම වැටුණොත් position එක දවස් ගානක් open වෙලා තියෙන්න පුළුවන් — win-rate වැඩි නමුත් risk control අඩුයි. Market එකේ තියාගන්න පුළුවන් සල්ලි විතරක් පාවිච්චි කරන්න.",
     "conn.live": "සජීවී", "conn.demo": "නියැදි දත්ත", "conn.off": "නොබැඳි", "conn.loading": "පූරණය…",
     "sort.vol": "🔥 වැඩිම පරිමාව", "sort.gain": "📈 ඉහළ ගිය", "sort.loss": "📉 පහළ ගිය", "sort.fav": "★ මගේ ලැයිස්තුව",
@@ -321,7 +321,8 @@ function load() {
     if (s.paper) state.paper = s.paper;
     if (s.alerts) state.alerts = s.alerts;
     if (s.chartInd) Object.assign(state.chartInd, s.chartInd);
-    if (s.botCfg) state.botCfg = Object.assign(botCfg(), s.botCfg);
+    const savedBot = s.bot || s.botCfg;             /* save() writes "bot" — accept both */
+    if (savedBot) state.botCfg = Object.assign(botCfg(), savedBot);
   } catch (e) { console.warn("load", e); }
 }
 function freshPaper() {
@@ -332,6 +333,7 @@ function botCfg() {
     strategy: "signal", tf: "15m", size: 50, tp: 1.5, sl: 0.8, symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
     allowShort: false, notify: true, keep: false, maxPos: 3, cooldown: 15, dailyLoss: 50,
     exitMode: "minprofit", minProfit: 0.01,   /* 24/7: sell at ANY net profit, never at a loss */
+    entryScore: 20,                                       /* LONG entry threshold (signal strategy) */
     dayTarget: 0, maxHoldDays: 0, maxHoldLoss: 25,      /* discipline + emergency brake (0 = off) */
     dca: false, dcaDrop: 3, dcaMax: 1,                  /* auto-DCA recovery booster */
     volGuard: true, volDrop: 5,                         /* skip entries while a coin is crashing */
@@ -1788,8 +1790,9 @@ function decide(rep, klines, strat, allowShort) {
     if (c < lo) return need ? -1 : 0;
     return 0;
   }
-  // default: blended AI signal
-  if (rep.score >= 25) return 1;
+  // default: blended AI signal (threshold configurable in bot settings)
+  const th = Math.min(40, Math.max(5, Number((typeof botCfg === "function" && botCfg().entryScore) || 20)));
+  if (rep.score >= th) return 1;
   if (rep.score <= -25) return need ? -1 : 0;
   return 0;
 }
@@ -1835,6 +1838,13 @@ async function botEvalSymbol(sym, cfg) {
   b.stats.signals++;
   const bias = decide(rep, klines, cfg.strategy, cfg.allowShort);
   const price = (state.tickers[sym] && state.tickers[sym].last) || klines[klines.length - 1].c;
+  if (!bias && cfg.strategy === "signal") {
+    b.lastWait = b.lastWait || {};
+    if (now() - (b.lastWait[sym] || 0) > 300000) {
+      b.lastWait[sym] = now();
+      logLine(sym + " " + cfg.tf + " — waiting: score " + rep.score + " (need +" + Math.max(5, Math.min(40, Number(cfg.entryScore) || 20)) + ")", "");
+    }
+  }
   const held = paper().positions.filter((x) => x.sym === sym && x.src === "bot");
   const liveHeld = (b.livePos || []).filter((x) => x.sym === sym);
   logLine(`${sym} ${cfg.tf} · ${rep.verdict} (${rep.score}, conf ${rep.confidence}%) → bias ${bias > 0 ? "LONG" : bias < 0 ? "SHORT" : "flat"}`, bias ? "ai" : "");
@@ -1970,6 +1980,7 @@ function botStop() {
   if (!b.running) return;
   b.running = false;
   if (b.loop) { clearInterval(b.loop); b.loop = null; }
+  bc("setAutoOn", false);          /* explicit stop → no auto-resume after relaunch/reboot */
   bc("stopBgService");
   bc("setTradingActive", false);
   bc("setKeepScreenOn", !!(state.settings.keep));
@@ -2041,6 +2052,8 @@ function paintBot() {
   if (exSel) exSel.value = cfg.exitMode === "minprofit" ? "minprofit" : "classic";
   const mpIn = $("bMinP");
   if (mpIn) mpIn.value = (cfg.minProfit != null ? cfg.minProfit : 0.01);
+  const bEn = $("bEntry");
+  if (bEn) bEn.value = (cfg.entryScore != null ? cfg.entryScore : 20);
   const mpw = $("mpWarn");
   if (mpw) { mpw.textContent = t("mp.warn"); mpw.style.display = cfg.exitMode === "minprofit" ? "block" : "none"; }
   $("bShort").classList.toggle("on", !!cfg.allowShort);
@@ -2299,6 +2312,8 @@ function bindUI() {
   if (bExit) bExit.onchange = () => { botCfg().exitMode = bExit.value; save(); paintBot(); };
   const bMinP = $("bMinP");
   if (bMinP) bMinP.onchange = () => { botCfg().minProfit = Math.max(0.01, Number(bMinP.value) || 0.01); save(); paintBot(); };
+  const bEntry = $("bEntry");
+  if (bEntry) bEntry.onchange = () => { botCfg().entryScore = Math.min(40, Math.max(5, Number(bEntry.value) || 20)); save(); paintBot(); };
   // 24/7 card
   const batFix = $("btBatFix");
   if (batFix) batFix.onclick = () => bc("requestBatteryExemption");
