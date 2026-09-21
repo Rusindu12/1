@@ -27,6 +27,7 @@ https://github.com/Rusindu12/Rs-et/releases/tag/cryptoai-apk-latest)
 | 🎯 **සංඥා** | **STRONG BUY → STRONG SELL** තීරණය + විශ්වාසය %, trend vs oscillator blocks, හේතු, දර්ශක 12, ATR මත entry/TP/SL, backtest, **කාල රාමු 4ක එකඟතාව** (5m/15m/1h/4h) |
 | 💱 **වෙළඳාම** | **පුහුණු (paper) mode** — 10,000 USDT, 0.1% ගාස්තු, buy/sell, limit, TP/SL, history · **අවදානම් % මත ගණනය කරන position size calculator** · **සංඛ්‍යාලේඛන + equity curve** |
 | 🤖 **රොබෝ** | Auto-bot: උපාය 4ක්, කොයින් කිහිපයක්, max positions, cooldown, දෛනික පාඩු සීමාව |
+| 🖥️ **පද්ධතිය** | Real-time මෙහෙයුම් එන්ජිම — Process/Memory/Device/File/Security/Network කළමනාකරණය, PIN අගුල, trades CSV export |
 
 **🔎 හැම කොයින් එකක්ම එකවර:** වෙළඳපොල tab එකේ **"Scan all signals"** ඔබන්න — කොයින් 26ම
 එකම කාල රාමුවේ විශ්ලේෂණය කරලා, සංඥා ශක්තිය අනුව ශ්‍රේණිගත කරලා පෙන්වයි. ශක්තිමත්ම

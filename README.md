@@ -26,6 +26,7 @@ web/                      # මේ තමයි ඒ terminal එකම web versi
 | 🎯 **Signal** | STRONG BUY…STRONG SELL verdict + confidence, reasons, 12 indicators, ATR entry/target/stop, 500-candle backtest, 4-timeframe agreement |
 | 💱 **Trade** | paper mode (10,000 USDT, 0.1% fee, long/short, TP/SL, limit) + live (Binance/Bybit, keys signed on-device) |
 | 🤖 **Bot** | 4 strategies (AI signal / trend / reversion / breakout), multi-symbol, risk limits, daily-loss stop |
+| 🖥️ **System** | **Real-time මෙහෙයුම් එන්ජිම** — Process / Memory / Device / File / Security / Network management |
 
 - **Account/keys ඕන නෑ** — prices, signals, charts, paper trading ඔක්කොම free.
 - Exchange එකක් reach කරන්න බැරි වුණොත් clearly-labelled **simulated demo data** වලින් වැඩ කරනවා.

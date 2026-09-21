@@ -34,19 +34,20 @@ jobs:
       - name: Sync the web app with the Android assets
         run: |
           set -e
-          for f in index.html app.js ta.js; do
+          for f in index.html app.js ta.js sysmgmt.js; do
             cp "crypto-app/app/src/main/assets/$f" "web/app/$f"
           done
           diff -q crypto-app/app/src/main/assets/index.html web/app/index.html
-          echo "web app synced: $(wc -c < web/app/app.js) bytes of app.js"
+          echo "web app synced: $(wc -c < web/app/app.js) bytes of app.js, $(wc -c < web/app/sysmgmt.js) bytes of sysmgmt.js"
 
       - name: Sanity-check the site
         run: |
           set -e
           test -s web/index.html
-          test -s web/app/index.html && test -s web/app/app.js && test -s web/app/ta.js
+          test -s web/app/index.html && test -s web/app/app.js && test -s web/app/ta.js && test -s web/app/sysmgmt.js
           node --check web/app/app.js
           node --check web/app/ta.js
+          node --check web/app/sysmgmt.js
           python3 -c "import json;json.load(open('web/manifest.webmanifest'))"
           grep -q "releases/download" web/index.html || { echo "APK link missing"; exit 1; }
           echo "site OK"

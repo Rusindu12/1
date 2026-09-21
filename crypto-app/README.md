@@ -8,8 +8,13 @@ auto-bot with risk limits, price alerts and an optional AI explanation.**
 crypto-app/app/src/main/assets/
 ├── index.html   layout + dark Material-ish theme (EN/සිංහල)
 ├── ta.js        pure TA engine: EMA/SMA/RSI/MACD/Bollinger/ATR/Stochastic, signal scoring, backtester
-└── app.js       market data (Binance/Bybit/OKX + WebSocket), chart renderer, paper/live trading,
-                 bot strategies, alerts, i18n, settings, persistence
+├── app.js       market data (Binance/Bybit/OKX + WebSocket), chart renderer, paper/live trading,
+│                bot strategies, alerts, i18n, settings, persistence
+└── sysmgmt.js   🖥️ real-time activity engine — 1 Hz scheduler with 9 managed processes +
+                 memory/heap sampler + storage audit, device status (battery/screen/bridge),
+                 virtual file system (exports: trades CSV / settings / logs / signal reports),
+                 PIN lock (SHA-256) + auto-lock + security audit/log, exchange latency probes
+                 + request log (Process · Memory · Device · File · Security · Network management)
 ```
 
 The Kotlin side provides `window.AndroidBridge` (Binance/Bybit HMAC-signed requests, key storage,
@@ -30,6 +35,7 @@ Every push that touches `crypto-app/**` builds a debug APK via GitHub Actions:
 | 🎯 **Signal** | blended verdict (STRONG BUY … STRONG SELL) with confidence, trend vs oscillator blocks, reasons, 12 indicator metrics, ATR-based entry/target/stop, 500-candle backtest, optional AI explanation |
 | 💱 **Trade** | paper mode (10,000 USDT, 0.1% fee, long/short, TP/SL, limit orders, history) and live mode (Binance/Bybit spot, keys signed on-device) |
 | 🤖 **Bot** | 4 strategies (AI signal / trend / reversion / breakout), multi-symbol, TP/SL, max positions, cooldown, daily-loss stop, activity log, notifications |
+| 🖥️ **System** | **Real-time activity engine** — Process / Memory / Device / File / Security / Network management (සියල්ලම live) |
 
 Notes:
 - **No account is needed** for prices, signals, charts or paper trading.

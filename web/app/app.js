@@ -1238,6 +1238,7 @@ function switchTab(name) {
   if (name === "signals") { paintSignals(); paintMTF(); }
   if (name === "trade") { if (!lastReport) paintSignals(); paintTrade(); paintCalc(); paintStats(); }
   if (name === "bot") paintBot();
+  if (name === "sys" && window.SysMgmt) window.SysMgmt.onShow();
 }
 
 function renderAll() {
@@ -2227,7 +2228,7 @@ function init() {
   document.querySelectorAll("#indChips [data-ind]").forEach((x) => x.classList.toggle("on", !!state.chartInd[x.dataset.ind]));
   $("bSymbols").innerHTML = "";
   paintBot();
-  const TABS = ["markets", "chart", "signals", "trade", "bot"];
+  const TABS = ["markets", "chart", "signals", "trade", "bot", "sys"];
   const fromHash = () => (location.hash || "").replace(/^#/, "").split("?")[0];
   switchTab(TABS.indexOf(fromHash()) >= 0 ? fromHash() : (state.tab || "markets"));
   window.addEventListener("hashchange", () => { if (TABS.indexOf(fromHash()) >= 0) switchTab(fromHash()); });
