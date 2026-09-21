@@ -452,6 +452,19 @@ nav .nb{position:absolute;top:4px;right:calc(50% - 22px);min-width:15px;height:1
         <button class="btn primary" id="botStart" data-i18n="bot.start">▶ Start bot</button>
         <button class="btn ghost" id="botStop" data-i18n="bot.stop">■ Stop</button>
       </div>
+      <div class="card mt" id="c247">
+        <div class="row between">
+          <h3 style="margin:0">⏰ <span data-i18n="bot24.title">24/7 trading</span></h3>
+          <span class="chip" id="btBgChip">—</span>
+        </div>
+        <div class="hint mt" data-i18n="bot24.desc"></div>
+        <div class="grid2 mt">
+          <button class="btn ghost sm" id="btBatFix">🔋 <span data-i18n="bot24.batfix">Allow unrestricted battery</span></button>
+          <button class="btn ghost sm" id="btTest">🧪 <span data-i18n="bot24.test">Close app (bot continues)</span></button>
+        </div>
+        <div class="hint mt" id="btBatLine">—</div>
+        <div class="hint mt" data-i18n="bot24.tips"></div>
+      </div>
       <div class="card mt">
         <div class="row between"><h3 style="margin:0" data-i18n="bot.log">Activity log</h3><button class="btn ghost sm" id="botClear" data-i18n="bot.clear">clear</button></div>
         <div class="log mt" id="botLog"></div>

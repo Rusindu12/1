@@ -2,6 +2,7 @@ package com.cryptoai.pro
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -19,8 +20,9 @@ import java.util.Locale
  * Every method is synchronous and returns a String/primitive; JS gets results directly.
  * Overloads are provided so slightly different call shapes from the HTML still work.
  */
-class AndroidBridge(private val activity: MainActivity) {
-    private val ctx: Context = activity.applicationContext
+class AndroidBridge(private val ctx: Context, private val activity: MainActivity?) {
+    /** Normal app usage: the visible MainActivity owns the bridge. */
+    constructor(activity: MainActivity) : this(activity.applicationContext, activity)
     private val binance = Binance(ctx)
     private val bybit = Bybit(ctx)
     private val prefs = ctx.getSharedPreferences("bridge", Context.MODE_PRIVATE)
@@ -78,7 +80,7 @@ class AndroidBridge(private val activity: MainActivity) {
 
     // ---------- UX ----------
     @JavascriptInterface fun toast(msg: String) {
-        activity.runOnUiThread { Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show() }
+        activity?.runOnUiThread { Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show() }
     }
 
     @JavascriptInterface fun haptic() = haptic(40)
@@ -111,9 +113,10 @@ class AndroidBridge(private val activity: MainActivity) {
     }
 
     @JavascriptInterface fun setKeepScreenOn(on: Boolean) {
-        activity.runOnUiThread {
-            if (on) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val a = activity ?: return
+        a.runOnUiThread {
+            if (on) a.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            else a.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
@@ -121,11 +124,11 @@ class AndroidBridge(private val activity: MainActivity) {
     @JavascriptInterface fun startBgService() = startBgService("Trading bot running")
     @JavascriptInterface fun startBgService(text: String) {
         prefs.edit().putBoolean("bg", true).apply()
-        activity.runOnUiThread { BotService.start(ctx, text) }
+        BotService.start(ctx, text)
     }
     @JavascriptInterface fun stopBgService() {
         prefs.edit().putBoolean("bg", false).apply()
-        activity.runOnUiThread { BotService.stop(ctx) }
+        BotService.stop(ctx)
     }
     @JavascriptInterface fun isBgServiceRunning(): Boolean = prefs.getBoolean("bg", false)
 
@@ -143,11 +146,35 @@ class AndroidBridge(private val activity: MainActivity) {
     @JavascriptInterface fun isTradingActive(): Boolean = prefs.getBoolean("trading", false)
 
     @JavascriptInterface fun updateTradeStatus(text: String) {
-        if (isBgServiceRunning()) activity.runOnUiThread { BotService.update(ctx, text) }
+        if (isBgServiceRunning()) BotService.update(ctx, text)
     }
     @JavascriptInterface fun updateTradeStatus(json: String, extra: String) = updateTradeStatus("$json $extra")
 
-    @JavascriptInterface fun exitApp() { activity.runOnUiThread { activity.finishAffinity() } }
+    @JavascriptInterface fun exitApp() { activity?.runOnUiThread { activity?.finishAffinity() } }
+
+    // ---------- 24/7 ----------
+    /** true when Android may still kill us (battery optimization on). */
+    @JavascriptInterface fun batteryOptimized(): Boolean {
+        val pm = ctx.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        return !pm.isIgnoringBatteryOptimizations(ctx.packageName)
+    }
+
+    /** Open the system dialog asking the user to exempt the app from battery optimization. */
+    @JavascriptInterface fun requestBatteryExemption() {
+        activity?.runOnUiThread {
+            try {
+                val i = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    android.net.Uri.parse("package:" + ctx.packageName))
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                ctx.startActivity(i)
+            } catch (_: Exception) {
+                try {
+                    ctx.startActivity(Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (_: Exception) {}
+            }
+        }
+    }
 
     fun destroy() { tts?.stop(); tts?.shutdown() }
 }

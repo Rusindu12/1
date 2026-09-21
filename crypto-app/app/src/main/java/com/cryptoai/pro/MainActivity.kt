@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         bridge = AndroidBridge(this)
         web.addJavascriptInterface(bridge, "AndroidBridge")
+        BotService.attachMain()   // 24/7: the visible app owns the bot; stop any headless engine
 
         web.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) { request.grant(request.resources) }
@@ -83,5 +84,9 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); web.saveState(outState) }
     override fun onResume() { super.onResume(); web.onResume(); web.resumeTimers() }
     // Do NOT pause timers on pause: the bot keeps running in the background with the foreground service.
-    override fun onDestroy() { bridge.destroy(); web.destroy(); super.onDestroy() }
+    override fun onDestroy() {
+        // 24/7: if the bot was running, the headless background engine takes over here.
+        BotService.detachMain(this)
+        bridge.destroy(); web.destroy(); super.onDestroy()
+    }
 }

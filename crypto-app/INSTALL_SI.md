@@ -63,3 +63,23 @@ https://github.com/Rusindu12/Rs-et/releases/tag/cryptoai-apk-latest)
 
 **Developer:** `arena/01a0bf18-rs-et` branch එකේ commit `1de6956` එකෙන් build වූවක්
 (CI run: CryptoAI PRO APK ✅). Source: `crypto-app/`.
+
+## 4. ⏰ 24/7 auto-trading (app එක close වුණත් bot එක ක්‍රියාත්මක)
+
+Bot tab එකේ **▶ Start bot** ඔබපුවම ඉන්නවා — ඊට පස්සේ:
+
+- **Screen off / app background** → foreground service + wake-lock එකෙන් bot එක run වෙනවා
+- **App එක close කරාට පස්සේ** → headless background engine එක auto ම bot එක resume කරනවා
+- **Phone reboot වුණාට පස්සේ** → bot එක on වෙලා තිබ්බා නම් ආයේ auto ම පටන් ගන්නවා
+- හැම trade එකකටම **notification** එකක් එනවා, status bar notification එකේම live PnL/positions පෙන්නනවා
+
+### අනිවාර්යයි කරන්න ඕන දේවල් 2
+
+1. **🔋 Battery optimization ඉවත් කරන්න** — Bot tab → "24/7 trading" card එකේ
+   *"Allow unrestricted battery" button එක ඔබන්න → Allow*.
+   (නැත්තම් Android එක background engine එක kill කරන්න පුළුවන්.)
+2. **Xiaomi / Huawei / Oppo / Vivo** phones වල: Settings → **Autostart** → CryptoAI PRO **ON**,
+   Battery → **No restrictions**.
+
+> 💱 **Live mode** එකේදී මේක ඇත්තම හරි හරි money — keys දාන්න කලින් paper mode එකෙන් test කරලා
+> පිළිවෙළට තියාගන්න. Keys phone එකෙන් පිට වෙන්නේ නෑ (on-device signing).

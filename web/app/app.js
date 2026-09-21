@@ -11,6 +11,10 @@
 /* ------------------------------------------------------------------ bridge */
 const B = (typeof window !== "undefined" && window.AndroidBridge) ? window.AndroidBridge : null;
 
+/* 24/7 background engine: this page was loaded by the headless WebView (?bg=1) —
+ * no UI painting, just the trading bot + data feeds. */
+const BGQ = /(?:\?|&)bg=1/.test((typeof location !== "undefined" && location.search) || "");
+
 /** Call a bridge method safely; returns null when unavailable or throwing. */
 function bc(method, ...args) {
   if (!B || typeof B[method] !== "function") return null;
@@ -55,6 +59,11 @@ const ago = (ts) => { const s = Math.floor((now() - ts) / 1000); return s < 60 ?
 const STR = {
   en: {
     "nav.markets": "Markets", "nav.chart": "Chart", "nav.signals": "Signal", "nav.trade": "Trade", "nav.bot": "Bot",
+    "bot24.title": "24/7 trading", "bot24.desc": "The bot keeps trading with the app closed, screen off and after a reboot — a background engine auto-resumes it (paper & live).",
+    "bot24.batfix": "Allow unrestricted battery", "bot24.test": "Close app (bot continues)",
+    "bot24.batbody": "Android battery optimization can stop the 24/7 background engine.<br><br>Allow <b>Unrestricted</b> battery so the bot can keep buying & selling while the app is closed?",
+    "bot24.batok": "🔋 battery: unrestricted ✓", "bot24.batbad": "🔋 battery: restricted — tap fix",
+    "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. Trades & TP/SL still fire notifications while you are away.",
     "conn.live": "live", "conn.demo": "demo data", "conn.off": "offline", "conn.loading": "loading…",
     "sort.vol": "🔥 Top volume", "sort.gain": "📈 Gainers", "sort.loss": "📉 Losers", "sort.fav": "★ Watchlist",
     "demo.note": "⚠ No exchange connection — showing simulated demo data. Signals & bot work, prices are not real.",
@@ -142,6 +151,11 @@ const STR = {
   },
   si: {
     "nav.markets": "වෙළඳපොල", "nav.chart": "ප්‍රස්තාරය", "nav.signals": "සංඥා", "nav.trade": "වෙළඳාම", "nav.bot": "රොබෝ",
+    "bot24.title": "24/7 වෙළඳාම", "bot24.desc": "App එක close කරාමත්, screen off වුණාමත්, phone reboot වුණාට පස්සෙත් bot එක trade කරනවා — background engine එක auto ම resume කරනවා (paper & live).",
+    "bot24.batfix": "Battery optimization ඉවත් කරන්න", "bot24.test": "App එක close කරන්න (bot එක continue වෙනවා)",
+    "bot24.batbody": "Android battery optimization එකෙන් 24/7 background engine එක නවතින්න පුළුවන්.<br><br>App එක close වෙලා හිටපුවත් bot එකට buy/sell කරන්න <b>Unrestricted</b> battery allow කරන්නද?",
+    "bot24.batok": "🔋 battery: unrestricted ✓", "bot24.batbad": "🔋 battery: restricted — fix කරන්න",
+    "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. ඔයා ඈත හිටියත් trades & TP/SL notifications එනවා.",
     "conn.live": "සජීවී", "conn.demo": "නියැදි දත්ත", "conn.off": "නොබැඳි", "conn.loading": "පූරණය…",
     "sort.vol": "🔥 වැඩිම පරිමාව", "sort.gain": "📈 ඉහළ ගිය", "sort.loss": "📉 පහළ ගිය", "sort.fav": "★ මගේ ලැයිස්තුව",
     "demo.note": "⚠ හුවමාරු සම්බන්ධතාවක් නැත — නියැදි (demo) දත්ත පෙන්වයි. සංඥා සහ රොබෝ වැඩ කරයි, මිල සැබෑ නොවේ.",
@@ -739,6 +753,7 @@ const chg = (s) => (state.tickers[s] ? state.tickers[s].chg : 0);
 const vol = (s) => (state.tickers[s] ? state.tickers[s].vol || 0 : 0);
 
 function paintMarkets() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   const box = $("mList");
   const list = sortedSymbols();
   if (!list.length) { box.innerHTML = '<div class="empty">—</div>'; return; }
@@ -807,6 +822,7 @@ function drawSpark(cv, arr, up) {
 }
 
 function paintTickerStrip() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   const box = $("tickTrack");
   const items = state.favs.concat(WATCHLIST.filter((s) => state.favs.indexOf(s) < 0)).slice(0, 14);
   const html = items.map((s) => {
@@ -821,6 +837,7 @@ function paintTickerStrip() {
  * UI — chart
  * ========================================================================== */
 function paintChartHeader() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   const tk = state.tickers[state.sym] || {};
   $("symName").textContent = state.sym.replace("USDT", "/USDT");
   const b = $("chgBadge");
@@ -844,6 +861,7 @@ function candWidth(canvasW, n) {
 }
 
 function renderChart() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   const cv = $("chart");
   const wrap = cv.parentElement;
   const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -1066,6 +1084,7 @@ async function loadChart() {
 let lastReport = null;
 
 function paintSignals() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   const v = $("sigVerdict");
   if (!state.klines || state.klines.length < 30 || !TA) {
     v.className = "verdict neutral"; v.innerHTML = `<div class="v">—</div><div class="small mut">${t("sig.none")}</div>`;
@@ -1234,10 +1253,10 @@ function switchTab(name) {
   $("main").scrollTop = 0;
   if (name === "chart") { paintChartHeader(); requestAnimationFrame(renderChart); }
   /* keep the calculator's auto-filled stop in sync with the signal plan */
-  if (name === "markets") { paintMarkets(); scanInfo(); }
+  if (name === "markets") { paintMarkets(); if (!BGQ) scanInfo(); }
   if (name === "signals") { paintSignals(); paintMTF(); }
   if (name === "trade") { if (!lastReport) paintSignals(); paintTrade(); paintCalc(); paintStats(); }
-  if (name === "bot") paintBot();
+  if (name === "bot") { paintBot(); paint247(); }
   if (name === "sys" && window.SysMgmt) window.SysMgmt.onShow();
 }
 
@@ -1743,6 +1762,11 @@ async function botTick() {
     try { await botEvalSymbol(sym, cfg); } catch (e) { logLine(sym + ": " + (e.message || e), "bad"); }
   }
   paintBotStats(); if (state.tab === "trade") paintTrade();
+  /* 24/7 — keep the foreground-service notification fresh with live bot status */
+  try {
+    const openN = paper().positions.filter((x) => x.src === "bot").length;
+    bc("updateTradeStatus", "🤖 " + cfg.strategy + " · " + openN + "/" + cfg.maxPos + " pos · PnL " + fmtUsd(b.stats.pnl) + " · " + fmtClock(now()));
+  } catch (e) {}
 }
 
 async function botEvalSymbol(sym, cfg) {
@@ -1837,8 +1861,14 @@ function botStart() {
   b.loop = setInterval(botTick, 20000);
   logLine("── bot started · " + cfg.strategy + " · " + cfg.tf + " · " + cfg.symbols.join(", ") + " ──", "ok");
   notify(t("bot.started"), cfg.strategy + " · " + cfg.symbols.length + " pairs", "ok");
-  paintBot(); paintBotStats();
+  paintBot(); paintBotStats(); paint247();
   setTimeout(botTick, 1200);
+  /* 24/7 — battery optimization would let Android kill the background engine:
+     ask the user once per session to allow unrestricted battery. */
+  if (!BGQ && bc("batteryOptimized") === true && !bot()._batAsked) {
+    bot()._batAsked = true;
+    openOk("⏰ " + t("bot24.title"), t("bot24.batbody"), () => bc("requestBatteryExemption"));
+  }
 }
 function botStop() {
   const b = bot(), cfg = botCfg();
@@ -1850,7 +1880,7 @@ function botStop() {
   bc("setKeepScreenOn", !!(state.settings.keep));
   logLine("── bot stopped ──", "warn");
   notify(t("bot.stopped"), "", "bad");
-  paintBot(); paintBotStats();
+  paintBot(); paintBotStats(); paint247();
 }
 
 function paintBotStats() {
@@ -1884,6 +1914,18 @@ function paintBotSymbols() {
   });
 }
 
+/* ---- 24/7 status card (bot tab) ---- */
+function paint247() {
+  const chip = $("btBgChip"); if (!chip) return;
+  const b = bot();
+  chip.textContent = b.running ? t("bot24.title") + " ✓" : t("bot24.off");
+  chip.className = "chip " + (b.running ? "on" : "");
+  const batLine = $("btBatLine");
+  if (batLine) {
+    const opt = bc("batteryOptimized");
+    batLine.innerHTML = (opt === true) ? '<span style="color:var(--gold)">' + t("bot24.batbad") + "</span>" : (opt === false ? '<span style="color:var(--up)">' + t("bot24.batok") + "</span>" : "");
+  }
+}
 function paintBot() {
   const cfg = botCfg(), b = bot();
   $("bStrat").value = cfg.strategy;
@@ -2141,6 +2183,14 @@ function bindUI() {
   $("botStart").onclick = botStart;
   $("botStop").onclick = botStop;
   $("botClear").onclick = () => { bot().log = []; paintBot(); };
+  // 24/7 card
+  const batFix = $("btBatFix");
+  if (batFix) batFix.onclick = () => bc("requestBatteryExemption");
+  const btTest = $("btTest");
+  if (btTest) btTest.onclick = () => {
+    if (!bot().running) { toast(t("bot24.off"), "bad"); return; }
+    openOk("🧪 " + t("bot24.title"), t("bot24.desc"), () => { try { bc("exitApp"); } catch (e) {} });
+  };
 
   // settings fields
   $("setLang").onchange = (e) => { state.settings.lang = e.target.value; save(); applyI18n(); renderAll(); paintSettings(); };
@@ -2234,6 +2284,14 @@ function init() {
   window.addEventListener("hashchange", () => { if (TABS.indexOf(fromHash()) >= 0) switchTab(fromHash()); });
   startData().catch((e) => { console.warn("startData", e); setConn("off"); });
   setInterval(paintTickerStrip, 4000);
+  // 24/7 — auto-resume the bot (app relaunch, background engine boot, or after update)
+  if (bc("isAutoOn") === true && !bot().running) {
+    setTimeout(() => {
+      try {
+        if (!bot().running) { botStart(); logLine("24/7 auto-resume ✓ (bot was running)", "ok"); }
+      } catch (e) { console.warn("auto-resume", e); }
+    }, 2500);
+  }
   // surface nav badge for alerts when they exist
   paintAlertBadge();
   logLine("CryptoAI PRO ready" + (B ? " (Android)" : " (browser · paper only)"), "");
@@ -2364,6 +2422,7 @@ async function paintMTF() {
  * ========================================================================== */
 let calcQty = 0;
 function paintCalc() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   if (!TA) return;
   if (!lastReport && state.klines && state.klines.length > 30) lastReport = TA.analyze(state.klines);
   const tk = state.tickers[state.sym] || {};
@@ -2394,6 +2453,7 @@ function paintCalc() {
 }
 
 function paintStats() {
+  if (BGQ) return; /* 24/7 bg engine — skip UI */
   const p = paper();
   const closed = p.history.filter((h) => h.pnl != null);
   const wins = closed.filter((h) => h.pnl > 0);
