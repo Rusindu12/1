@@ -1865,6 +1865,11 @@ function allDecide(rep, klines, allowShort, brainTh, bd) {
 async function botTick() {
   const b = bot(), cfg = botCfg();
   if (!b.running) return;
+  if (b._busy) return;              /* previous tick still fetching — skip, don't stack */
+  b._busy = true;
+  try { await botTickInner(b, cfg); } finally { b._busy = false; }
+}
+async function botTickInner(b, cfg) {
   const lossSinceStart = paper().dayPnl - (b.dayStartPnl || 0);
   if (lossSinceStart <= -Math.abs(cfg.dailyLoss)) {
     logLine(t("bot.dailyStop") + " (" + fmtUsd(lossSinceStart) + ")", "bad");
@@ -1883,10 +1888,13 @@ async function botTick() {
     try { await botEvalSymbol(sym, cfg); } catch (e) { logLine(sym + ": " + (e.message || e), "bad"); }
   }
   paintBotStats(); if (state.tab === "trade") paintTrade();
-  /* 24/7 — keep the foreground-service notification fresh with live bot status */
+  /* 24/7 — keep the foreground-service notification fresh (throttled to 10s) */
   try {
-    const openN = paper().positions.filter((x) => x.src === "bot").length;
-    bc("updateTradeStatus", "🤖 " + cfg.strategy + " · " + openN + "/" + cfg.maxPos + " pos · PnL " + fmtUsd(b.stats.pnl) + " · " + fmtClock(now()));
+    if (now() - (b._lastStatus || 0) > 10000) {
+      b._lastStatus = now();
+      const openN = paper().positions.filter((x) => x.src === "bot").length;
+      bc("updateTradeStatus", "🤖 " + cfg.strategy + " · " + openN + "/" + cfg.maxPos + " pos · PnL " + fmtUsd(b.stats.pnl) + " · " + fmtClock(now()));
+    }
   } catch (e) {}
 }
 
@@ -1895,7 +1903,7 @@ async function botEvalSymbol(sym, cfg) {
   const key = sym + "|" + cfg.tf;
   let klines;
   const cache = state.klinesCache[key];
-  if (cache && now() - cache.at < 55000) klines = cache.candles;
+  if (cache && now() - cache.at < 5000) klines = cache.candles;   /* v40: fresh candles for 2s cadence */
   else klines = await fetchKlinesSmart(sym, cfg.tf, 300);
   if (!klines || klines.length < 60) return;
   const rep = TA.analyze(klines);
@@ -1932,8 +1940,15 @@ async function botEvalSymbol(sym, cfg) {
   }
   const held = paper().positions.filter((x) => x.sym === sym && x.src === "bot");
   const liveHeld = (b.livePos || []).filter((x) => x.sym === sym);
-  if (allRes) logLine(`🧠✦ ${sym} ${cfg.tf} · ALL ${allRes.str} → net ${(allRes.net >= 0 ? "+" : "")}${(allRes.net * 100).toFixed(0)}% (agree ${allRes.agree})`, bias ? "ai" : "");
-  logLine(`${sym} ${cfg.tf} · ${rep.verdict} (${rep.score}, conf ${rep.confidence}%) → bias ${bias > 0 ? "LONG" : bias < 0 ? "SHORT" : "flat"}`, bias ? "ai" : "");
+  /* 2s cadence: log the verdict only when bias flips or once a minute per symbol */
+  b._vLog = b._vLog || {};
+  const vPrev = b._vLog[sym] || {};
+  const vLog = vPrev.bias !== bias || now() - (vPrev.at || 0) > 60000;
+  b._vLog[sym] = { bias, at: now() };
+  if (vLog) {
+    if (allRes) logLine(`🧠✦ ${sym} ${cfg.tf} · ALL ${allRes.str} → net ${(allRes.net >= 0 ? "+" : "")}${(allRes.net * 100).toFixed(0)}% (agree ${allRes.agree})`, bias ? "ai" : "");
+    logLine(`${sym} ${cfg.tf} · ${rep.verdict} (${rep.score}, conf ${rep.confidence}%) → bias ${bias > 0 ? "LONG" : bias < 0 ? "SHORT" : "flat"}`, bias ? "ai" : "");
+  }
 
   // exits on a flip
   if (bias <= 0 && held.length && held[0].dir > 0) {
@@ -2058,8 +2073,8 @@ function botStart() {
   bc("setTradingActive", true);
   bc("startBgService", "CryptoAI bot · " + cfg.symbols.length + " pairs · " + cfg.strategy);
   if (b.loop) clearInterval(b.loop);
-  b.loop = setInterval(botTick, 20000);
-  logLine("── bot started · " + cfg.strategy + " · " + cfg.tf + " · " + cfg.symbols.join(", ") + " ──", "ok");
+  b.loop = setInterval(botTick, 2000);   /* v40: scan every 2s */
+  logLine("── bot started · " + cfg.strategy + " · " + cfg.tf + " · ⏱2s scan · " + cfg.symbols.join(", ") + " ──", "ok");
   notify(t("bot.started"), cfg.strategy + " · " + cfg.symbols.length + " pairs", "ok");
   paintBot(); paintBotStats(); paint247();
   setTimeout(botTick, 1200);
