@@ -25,7 +25,7 @@ web/                      # මේ තමයි ඒ terminal එකම web versi
 | 🕯️ **Chart** | candlestick + EMA 20/50, Bollinger, volume, RSI(14), drag-inspect, TF 1m…1d |
 | 🎯 **Signal** | STRONG BUY…STRONG SELL verdict + confidence, reasons, 12 indicators, ATR entry/target/stop, 500-candle backtest, 4-timeframe agreement |
 | 💱 **Trade** | paper mode (10,000 USDT, 0.1% fee, long/short, TP/SL, limit) + live (Binance/Bybit, keys signed on-device) |
-| 🤖 **Bot** | 5 strategies (🧠 AI brain / AI signal / trend / reversion / breakout), multi-symbol, risk limits, daily-loss stop |
+| 🤖 **Bot** | 6 modes — 🧠✦ **All Together** (5-strategy weighted consensus) / AI Brain / AI signal / trend / reversion / breakout, multi-symbol, risk limits, daily-loss stop |
 | 🖥️ **System** | **Real-time මෙහෙයුම් එන්ජිම** — Process / Memory / Device / File / Security / Network management |
 
 - **Account/keys ඕන නෑ** — prices, signals, charts, paper trading ඔක්කොම free.

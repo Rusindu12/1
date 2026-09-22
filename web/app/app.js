@@ -114,7 +114,9 @@ const STR = {
     "bot.log": "Activity log", "bot.clear": "clear",
     "bot.stat.signals": "Signals", "bot.stat.trades": "Trades", "bot.stat.win": "Win rate", "bot.stat.pnl": "Bot P&L",
     "bot.riskNote": "The bot stops itself when the daily loss limit is hit. Duplicate entries per symbol are blocked for the cooldown window.",
+    "bot.strat.all": "🧠✦ All Together (5-in-1 consensus)",
     "bot.strat.brain": "🧠 AI Brain (self-learning)",
+    "bot.desc.all": "All 5 strategies vote together — AI Brain (top weight, it learns), AI signal, Trend, Mean reversion, Breakout. Enters only when the weighted consensus agrees — fewer trades, higher confidence.",
     "bot.desc.brain": "Analyzes 12 market factors every tick and trades on the combined score. Learns from every closed trade (win/loss) and from history training — weights keep adapting.",
     "bot.strat.signal": "AI signal (trend + oscillators)",
     "bot.strat.trend": "Trend follower (EMA cross + MACD)",
@@ -228,7 +230,9 @@ const STR = {
     "bot.log": "ක්‍රියාකාරකම් සටහන", "bot.clear": "මකන්න",
     "bot.stat.signals": "සංඥා", "bot.stat.trades": "වෙළඳාම්", "bot.stat.win": "දිනුම් %", "bot.stat.pnl": "රොබෝ ලාභය",
     "bot.riskNote": "දෛනික පාඩු සීමාවට ළඟා වූ විට රොබෝ තමන්ම නවතී. එකම කොයින් එකට නැවත ඇතුල්වීම නියමිත කාලයක් තුළ අවහිරයි.",
+    "bot.strat.all": "🧠✦ ඔක්කොම එකතුව (උපාය 5ක් එකට)",
     "bot.strat.brain": "🧠 AI Brain (ඉගෙන ගන්නා)",
+    "bot.desc.all": "උපාය 5ම එකට vote කරනවා — AI Brain (වැඩිම බර, එයා ඉගෙන ගන්නවා), AI සංඥාව, ප්‍රවණතාව, Mean reversion, Breakout. Weighted consensus එක එකඟ වුණාම විතරයි ඇතුල් වෙන්නේ — trades අඩුයි, විශ්වාසය වැඩියි.",
     "bot.desc.brain": "හැම tick එකකම market factors 12ක් analyze කරලා trade කරනවා. හැම closed trade එකකින්ම (දිනුම/පැරදුම) ඉගෙන ගන්නවා — history training වලිනුත්. Weights එක දිගටම යාවත්කාලීන වෙනවා.",
     "bot.strat.signal": "AI සංඥාව (ප්‍රවණතාව + oscillators)",
     "bot.strat.trend": "ප්‍රවණතාව අනුගමනය (EMA cross + MACD)",
@@ -1836,6 +1840,28 @@ function decide(rep, klines, strat, allowShort) {
   return 0;
 }
 
+/* —— v39 "All Together": every strategy votes, weighted consensus decides ——
+   Brain carries the top weight (1.5) because it is the one that learns from
+   live outcomes; the other four are fixed-rule voters. Entry needs |net| >= 0.2
+   so a lone strategy can never drag the bot into a trade. */
+function allDecide(rep, klines, allowShort, brainTh, bd) {
+  const arrow = (v) => (v > 0.05 ? "↑" : v < -0.05 ? "↓" : "–");
+  const str2 = (bias, score) => (bias > 0 ? Math.min(1, Math.abs(score) / Math.max(brainTh, 0.05)) : bias < 0 ? -Math.min(1, Math.abs(score) / Math.max(brainTh, 0.05)) : 0);
+  const votes = [
+    { n: "🧠", v: str2(bd.bias, bd.score), w: 1.5 },
+    { n: "📊", v: decide(rep, klines, "signal", allowShort), w: 1 },
+    { n: "📈", v: decide(rep, klines, "trend", allowShort), w: 1 },
+    { n: "🔄", v: decide(rep, klines, "revert", allowShort), w: 0.8 },
+    { n: "💥", v: decide(rep, klines, "breakout", allowShort), w: 1 },
+  ];
+  let num = 0, den = 0;
+  votes.forEach((x) => { num += x.v * x.w; den += x.w; });
+  const net = num / den;
+  let bias = net >= 0.2 ? 1 : net <= -0.2 ? -1 : 0;
+  if (bias < 0 && !allowShort) bias = 0;
+  return { bias, net, str: votes.map((x) => x.n + arrow(x.v)).join(" "), agree: votes.filter((x) => x.v * bias > 0.05).length + "/" + votes.length };
+}
+
 async function botTick() {
   const b = bot(), cfg = botCfg();
   if (!b.running) return;
@@ -1876,22 +1902,29 @@ async function botEvalSymbol(sym, cfg) {
   if (!rep.ok) return;
   b.stats.signals++;
   let brainF = null, brainTh = Math.max(0.05, Math.min(0.4, (Number(cfg.entryScore) || 20) / 100));
-  let bias;
-  if (cfg.strategy === "brain" && Brain) {
+  let bias, allRes = null;
+  if ((cfg.strategy === "brain" || cfg.strategy === "all") && Brain) {
     brainF = Brain.features(klines, { btcChg: sym !== "BTCUSDT" && state.tickers["BTCUSDT"] ? state.tickers["BTCUSDT"].chg : 0 });
     const d = Brain.decide(brainF, brainTh);
-    bias = d.bias;
-    if (bias < 0 && !cfg.allowShort) bias = 0;
     b._brainScore = d.score;
+    if (cfg.strategy === "all") {
+      allRes = allDecide(rep, klines, cfg.allowShort, brainTh, d);
+      bias = allRes.bias;
+    } else {
+      bias = d.bias;
+      if (bias < 0 && !cfg.allowShort) bias = 0;
+    }
   } else {
     bias = decide(rep, klines, cfg.strategy, cfg.allowShort);
   }
   const price = (state.tickers[sym] && state.tickers[sym].last) || klines[klines.length - 1].c;
-  if (!bias && (cfg.strategy === "signal" || (cfg.strategy === "brain" && Brain))) {
+  if (!bias && (cfg.strategy === "signal" || ((cfg.strategy === "brain" || cfg.strategy === "all") && Brain))) {
     b.lastWait = b.lastWait || {};
     if (now() - (b.lastWait[sym] || 0) > 300000) {
       b.lastWait[sym] = now();
-      const why = cfg.strategy === "brain"
+      const why = cfg.strategy === "all"
+        ? "ALL net " + (allRes.net >= 0 ? "+" : "") + (allRes.net * 100).toFixed(0) + "% (need ±20) " + allRes.str
+        : cfg.strategy === "brain"
         ? "brain " + (b._brainScore != null ? (b._brainScore >= 0 ? "+" : "") + (b._brainScore * 100).toFixed(0) : "?") + " (need +" + Math.round(brainTh * 100) + ")"
         : "score " + rep.score + " (need +" + Math.max(5, Math.min(40, Number(cfg.entryScore) || 20)) + ")";
       logLine(sym + " " + cfg.tf + " — waiting: " + why, "");
@@ -1899,6 +1932,7 @@ async function botEvalSymbol(sym, cfg) {
   }
   const held = paper().positions.filter((x) => x.sym === sym && x.src === "bot");
   const liveHeld = (b.livePos || []).filter((x) => x.sym === sym);
+  if (allRes) logLine(`🧠✦ ${sym} ${cfg.tf} · ALL ${allRes.str} → net ${(allRes.net >= 0 ? "+" : "")}${(allRes.net * 100).toFixed(0)}% (agree ${allRes.agree})`, bias ? "ai" : "");
   logLine(`${sym} ${cfg.tf} · ${rep.verdict} (${rep.score}, conf ${rep.confidence}%) → bias ${bias > 0 ? "LONG" : bias < 0 ? "SHORT" : "flat"}`, bias ? "ai" : "");
 
   // exits on a flip
@@ -2102,7 +2136,7 @@ function paintBrain() {
       `<span class="sm-hist"><i style="width:${Math.max(10, pct)}px;height:10px;background:${e.w >= 0 ? "var(--up)" : "var(--dn)"}"></i><b class="small"> ${e.w >= 0 ? "+" : ""}${e.w.toFixed(2)}</b></span></div>`;
   }).join("");
   const chip = $("brainChip");
-  if (chip) chip.textContent = (botCfg().strategy === "brain" ? "✓ " : "") + t("brain.lessons") + " " + (st.n + st.hs);
+  if (chip) chip.textContent = ((botCfg().strategy === "brain" || botCfg().strategy === "all") ? "✓ " : "") + t("brain.lessons") + " " + (st.n + st.hs);
   const note = $("brainNote");
   if (note) note.textContent = t("brain.note");
 }
@@ -2259,7 +2293,7 @@ function fillBotSelects() {
   const bs = $("bStrat");
   if (bs) {
     const cur = bs.value || botCfg().strategy;
-    bs.innerHTML = [["brain", "bot.strat.brain"], ["signal", "bot.strat.signal"], ["trend", "bot.strat.trend"],
+    bs.innerHTML = [["all", "bot.strat.all"], ["brain", "bot.strat.brain"], ["signal", "bot.strat.signal"], ["trend", "bot.strat.trend"],
       ["revert", "bot.strat.revert"], ["breakout", "bot.strat.breakout"]]
       .map(([v, k]) => `<option value="${v}">${t(k)}</option>`).join("");
     bs.value = cur;
