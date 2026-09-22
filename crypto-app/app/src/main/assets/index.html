@@ -476,6 +476,20 @@ nav .nb{position:absolute;top:4px;right:calc(50% - 22px);min-width:15px;height:1
         <button class="btn primary" id="botStart" data-i18n="bot.start">▶ Start bot</button>
         <button class="btn ghost" id="botStop" data-i18n="bot.stop">■ Stop</button>
       </div>
+      <div class="card mt" id="brainCard">
+        <div class="row between">
+          <h3 style="margin:0">🧠 <span data-i18n="brain.title">AI Brain</span></h3>
+          <span class="chip on" id="brainChip">—</span>
+        </div>
+        <div class="hint mt" data-i18n="brain.desc"></div>
+        <div class="grid4 mt" id="brainStats"></div>
+        <div id="brainWeights" class="mt"></div>
+        <div class="row mt" style="gap:6px">
+          <button class="btn ghost sm" id="brainTrain">🎓 <span data-i18n="brain.train">Train on history</span></button>
+          <button class="btn ghost sm" id="brainReset">♻️ <span data-i18n="brain.reset">Reset</span></button>
+        </div>
+        <div class="hint mt" id="brainNote"></div>
+      </div>
       <div class="card mt" id="c247">
         <div class="row between">
           <h3 style="margin:0">⏰ <span data-i18n="bot24.title">24/7 trading</span></h3>
@@ -644,6 +658,7 @@ nav .nb{position:absolute;top:4px;right:calc(50% - 22px);min-width:15px;height:1
 <div class="toasts" id="toasts"></div>
 
 <script src="ta.js"></script>
+<script src="brain.js"></script>
 <script src="app.js"></script>
 <script src="sysmgmt.js"></script>
 </body>

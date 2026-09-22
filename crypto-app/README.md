@@ -7,6 +7,7 @@ auto-bot with risk limits, price alerts and an optional AI explanation.**
 ```
 crypto-app/app/src/main/assets/
 ├── index.html   layout + dark Material-ish theme (EN/සිංහල)
+├── brain.js     🧠 self-learning trading brain (12 factors, online learning, history trainer)
 ├── ta.js        pure TA engine: EMA/SMA/RSI/MACD/Bollinger/ATR/Stochastic, signal scoring, backtester
 ├── app.js       market data (Binance/Bybit/OKX + WebSocket), chart renderer, paper/live trading,
 │                bot strategies, alerts, i18n, settings, persistence
@@ -34,7 +35,7 @@ Every push that touches `crypto-app/**` builds a debug APK via GitHub Actions:
 | 🕯️ **Chart** | last 140 candles, EMA 20/50, Bollinger, volume, RSI(14) panel, drag to inspect, timeframe 1m…1d |
 | 🎯 **Signal** | blended verdict (STRONG BUY … STRONG SELL) with confidence, trend vs oscillator blocks, reasons, 12 indicator metrics, ATR-based entry/target/stop, 500-candle backtest, optional AI explanation |
 | 💱 **Trade** | paper mode (10,000 USDT, 0.1% fee, long/short, TP/SL, limit orders, history) and live mode (Binance/Bybit spot, keys signed on-device) |
-| 🤖 **Bot** | 4 strategies, multi-symbol, profit-exit mode ("sell at ANY profit, never at a loss"), daily profit target, auto-DCA recovery, crash guard, TP/SL, risk limits, 24/7 background engine |
+| 🤖 **Bot** | 🧠 self-learning AI Brain (12 factors + learns from every trade), 4 classic strategies, multi-symbol, profit-exit mode ("sell at ANY profit, never at a loss"), daily profit target, auto-DCA recovery, crash guard, TP/SL, risk limits, 24/7 background engine |
 | 🖥️ **System** | **Real-time activity engine** — Process / Memory / Device / File / Security / Network management (සියල්ලම live) |
 
 Notes:

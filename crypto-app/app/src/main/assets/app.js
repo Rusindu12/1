@@ -66,6 +66,16 @@ const STR = {
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. Trades & TP/SL still fire notifications while you are away.",
     "mp.mode": "Exit mode", "mp.classic": "Classic (TP/SL)", "mp.minprofit": "✅ Sell at ANY profit — never at a loss", "mp.min": "Min profit (USDT, net of fees)",
     "mp.done": "Profit taken ✅",
+    "brain.title": "AI Brain", "brain.desc": "Analyzes 12 market factors (trend, momentum, volatility, volume, structure, BTC context) — and LEARNS from every trade outcome. Train it on history for instant experience.",
+    "brain.lessons": "Lessons", "brain.hist": "History training", "brain.factors2": "Factors",
+    "brain.train": "Train on history", "brain.reset": "Reset",
+    "brain.training": "🧠 training on 500 candles…", "brain.trained": "🧠 trained on {n} historical signals · {p}% were profitable — weights updated",
+    "brain.needK": "Load a chart first (need 200+ candles)", "brain.resetBody": "Reset all learned weights to defaults? The brain starts from zero again.",
+    "brain.note": "More lessons = smarter decisions. Weights persist across restarts; the 24/7 engine keeps learning in the background.",
+    "brain.f.trendEma": "EMA trend (fast)", "brain.f.trendSlow": "Big trend (slow)", "brain.f.trendPx": "Price vs EMA",
+    "brain.f.macd": "MACD momentum", "brain.f.rsi": "RSI momentum", "brain.f.stoch": "Stochastic",
+    "brain.f.bbPos": "Bollinger position", "brain.f.volX": "Volume conviction", "brain.f.atr": "Volatility (risk)",
+    "brain.f.structure": "HH/HL structure", "brain.f.candle": "Candle strength", "brain.f.btcCtx": "BTC market pull",
     "mp.target": "🎯 Daily profit target reached — bot resting", "mp.dca": "Auto-DCA · averaging down",
     "mp.volskip": "Crash guard — entry skipped", "mp.brake": "Emergency exit (max hold)",
     "bot.entry": "Entry strength (signal score 5–40; lower = more trades)", "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
@@ -104,6 +114,8 @@ const STR = {
     "bot.log": "Activity log", "bot.clear": "clear",
     "bot.stat.signals": "Signals", "bot.stat.trades": "Trades", "bot.stat.win": "Win rate", "bot.stat.pnl": "Bot P&L",
     "bot.riskNote": "The bot stops itself when the daily loss limit is hit. Duplicate entries per symbol are blocked for the cooldown window.",
+    "bot.strat.brain": "🧠 AI Brain (self-learning)",
+    "bot.desc.brain": "Analyzes 12 market factors every tick and trades on the combined score. Learns from every closed trade (win/loss) and from history training — weights keep adapting.",
     "bot.strat.signal": "AI signal (trend + oscillators)",
     "bot.strat.trend": "Trend follower (EMA cross + MACD)",
     "bot.strat.revert": "Mean reversion (RSI extremes)",
@@ -168,6 +180,16 @@ const STR = {
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. ඔයා ඈත හිටියත් trades & TP/SL notifications එනවා.",
     "mp.mode": "ඉවත්වීමේ ක්‍රමය", "mp.classic": "සම්භාව්‍ය (TP/SL)", "mp.minprofit": "✅ සතයක් හරි ලාභයි නම් sell — loss වෙලා විකුණන්නේ නෑ", "mp.min": "අවම ලාභය (USDT, fees අඩුවෙලා)",
     "mp.done": "ලාභය අරගත්තා ✅",
+    "brain.title": "AI Brain", "brain.desc": "Market factors 12ක් (ප්‍රවණතාව, ගම්‍යතාව, වාෂ්පශීලීනාත්වය, volume, ව්‍යුහය, BTC සන්දර්භය) analyze කරලා — හැම trade ප්‍රතිඵලයකින්ම ඉගෙන ගන්නවා. History training එකෙන් instant අත්දැකීම්.",
+    "brain.lessons": "පාඩම්", "brain.hist": "History training", "brain.factors2": "Factors",
+    "brain.train": "History එකෙන් train කරන්න", "brain.reset": "Reset",
+    "brain.training": "🧠 candles 500ක් උඩ train වෙමින්…", "brain.trained": "🧠 ඓතිහාසික signals {n}ක් උඩ train වුණා · {p}% ලාභයි — weights යාවත්කාලීන වුණා",
+    "brain.needK": "මුලින්ම chart එකක් open කරන්න (candles 200+ ඕන)", "brain.resetBody": "ඉගෙනගත්ත හැම weight එකක්ම default වලට reset කරන්නද?",
+    "brain.note": "පාඩම් වැඩි වෙන කොට තීරණ ඔලුවට. Weights restart වුණත් ඉතුරු වෙනවා; 24/7 engine එකේදීත් ඉගෙන ගන්නවා.",
+    "brain.f.trendEma": "EMA ප්‍රවණතාව", "brain.f.trendSlow": "ලොකු ප්‍රවණතාව", "brain.f.trendPx": "මිල vs EMA",
+    "brain.f.macd": "MACD ගම්‍යතාව", "brain.f.rsi": "RSI ගම්‍යතාව", "brain.f.stoch": "Stochastic",
+    "brain.f.bbPos": "Bollinger තත්ත්වය", "brain.f.volX": "Volume විශ්වාසය", "brain.f.atr": "වාෂ්පශීලීනාත්වය",
+    "brain.f.structure": "ව්‍යුහය (HH/HL)", "brain.f.candle": "Candle ශක්තිය", "brain.f.btcCtx": "BTC ඇදීම",
     "mp.target": "🎯 දෛනික ඉලක්කය ලැබුණා — bot එක අදට විවේකයි", "mp.dca": "Auto-DCA · average අඩු කරනවා",
     "mp.volskip": "Crash guard — entry එක skip කළා", "mp.brake": "හදිසි පිටවීම (max hold)",
     "bot.entry": "Entry ශක්තිය (score 5–40; අඩු නම් trades වැඩියි)", "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
@@ -206,6 +228,8 @@ const STR = {
     "bot.log": "ක්‍රියාකාරකම් සටහන", "bot.clear": "මකන්න",
     "bot.stat.signals": "සංඥා", "bot.stat.trades": "වෙළඳාම්", "bot.stat.win": "දිනුම් %", "bot.stat.pnl": "රොබෝ ලාභය",
     "bot.riskNote": "දෛනික පාඩු සීමාවට ළඟා වූ විට රොබෝ තමන්ම නවතී. එකම කොයින් එකට නැවත ඇතුල්වීම නියමිත කාලයක් තුළ අවහිරයි.",
+    "bot.strat.brain": "🧠 AI Brain (ඉගෙන ගන්නා)",
+    "bot.desc.brain": "හැම tick එකකම market factors 12ක් analyze කරලා trade කරනවා. හැම closed trade එකකින්ම (දිනුම/පැරදුම) ඉගෙන ගන්නවා — history training වලිනුත්. Weights එක දිගටම යාවත්කාලීන වෙනවා.",
     "bot.strat.signal": "AI සංඥාව (ප්‍රවණතාව + oscillators)",
     "bot.strat.trend": "ප්‍රවණතාව අනුගමනය (EMA cross + MACD)",
     "bot.strat.revert": "මිල ආපසු හැරවීම (RSI අන්ත)",
@@ -304,6 +328,7 @@ const state = {
 };
 
 let TA = null; // ta.js
+let Brain = null; // brain.js — self-learning trading brain
 
 /* -------------------------------------------------------------- persistence */
 const LSKEY = "cryptoai.pro.v2";
@@ -330,7 +355,11 @@ function load() {
     if (s.alerts) state.alerts = s.alerts;
     if (s.chartInd) Object.assign(state.chartInd, s.chartInd);
     const savedBot = s.bot || s.botCfg;             /* save() writes "bot" — accept both */
-    if (savedBot) state.botCfg = Object.assign(botCfg(), savedBot);
+    if (savedBot) {
+      /* one-time upgrade: old default "signal" → the self-learning brain (empty dropdown bug meant users never chose) */
+      if (!savedBot._brainMig) { savedBot._brainMig = 1; if (savedBot.strategy === "signal") savedBot.strategy = "brain"; }
+      state.botCfg = Object.assign(botCfg(), savedBot);
+    }
   } catch (e) { console.warn("load", e); }
 }
 function freshPaper() {
@@ -338,7 +367,7 @@ function freshPaper() {
 }
 function botCfg() {
   return state.botCfg || (state.botCfg = {
-    strategy: "signal", tf: "15m", size: 50, tp: 1.5, sl: 0.8, symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+    strategy: "brain", tf: "15m", size: 50, tp: 1.5, sl: 0.8, symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
     allowShort: false, notify: true, keep: false, maxPos: 3, cooldown: 15, dailyLoss: 50,
     exitMode: "minprofit", minProfit: 0.01,   /* 24/7: sell at ANY net profit, never at a loss */
     entryScore: 20,                                       /* LONG entry threshold (signal strategy) */
@@ -1370,6 +1399,8 @@ function closePaper(posId, price, reason) {
     bot.stats.pnl += pnl;
   }
   save();
+  /* 🧠 brain lesson: win or loss — update feature weights */
+  try { if (pos.brain && Brain) Brain.learn(pos.brain, pnl > 0 ? 1 : -1); } catch (e) {}
   return { ok: true, pnl };
 }
 function closePaperAll(sym, price, reason) {
@@ -1844,13 +1875,26 @@ async function botEvalSymbol(sym, cfg) {
   const rep = TA.analyze(klines);
   if (!rep.ok) return;
   b.stats.signals++;
-  const bias = decide(rep, klines, cfg.strategy, cfg.allowShort);
+  let brainF = null, brainTh = Math.max(0.05, Math.min(0.4, (Number(cfg.entryScore) || 20) / 100));
+  let bias;
+  if (cfg.strategy === "brain" && Brain) {
+    brainF = Brain.features(klines, { btcChg: sym !== "BTCUSDT" && state.tickers["BTCUSDT"] ? state.tickers["BTCUSDT"].chg : 0 });
+    const d = Brain.decide(brainF, brainTh);
+    bias = d.bias;
+    if (bias < 0 && !cfg.allowShort) bias = 0;
+    b._brainScore = d.score;
+  } else {
+    bias = decide(rep, klines, cfg.strategy, cfg.allowShort);
+  }
   const price = (state.tickers[sym] && state.tickers[sym].last) || klines[klines.length - 1].c;
-  if (!bias && cfg.strategy === "signal") {
+  if (!bias && (cfg.strategy === "signal" || (cfg.strategy === "brain" && Brain))) {
     b.lastWait = b.lastWait || {};
     if (now() - (b.lastWait[sym] || 0) > 300000) {
       b.lastWait[sym] = now();
-      logLine(sym + " " + cfg.tf + " — waiting: score " + rep.score + " (need +" + Math.max(5, Math.min(40, Number(cfg.entryScore) || 20)) + ")", "");
+      const why = cfg.strategy === "brain"
+        ? "brain " + (b._brainScore != null ? (b._brainScore >= 0 ? "+" : "") + (b._brainScore * 100).toFixed(0) : "?") + " (need +" + Math.round(brainTh * 100) + ")"
+        : "score " + rep.score + " (need +" + Math.max(5, Math.min(40, Number(cfg.entryScore) || 20)) + ")";
+      logLine(sym + " " + cfg.tf + " — waiting: " + why, "");
     }
   }
   const held = paper().positions.filter((x) => x.sym === sym && x.src === "bot");
@@ -1922,6 +1966,7 @@ async function botEvalSymbol(sym, cfg) {
   const dir = bias > 0 ? 1 : -1;
   const r = openPaper(sym, price, cfg.size, cfg.tp, cfg.sl, "bot", dir);
   if (r.error) { logLine(sym + ": " + (r.error === "insufficient" ? t("trade.insufficient") : r.error), "bad"); return; }
+  if (brainF && r.pos) { r.pos.brain = brainF; save(); }   /* remember WHY we entered → learn on close */
   b.lastEntry[sym] = now();
   notify(t("trade.placed"),
     `${dir > 0 ? "BUY" : "SHORT"} ${cfg.size} USDT ${sym.replace("USDT", "/USDT")} @ ${fmtPrice(price)}\nTP ${fmtPrice(r.pos.tp)} · SL ${fmtPrice(r.pos.sl)}`,
@@ -2028,6 +2073,31 @@ function paintBotSymbols() {
   });
 }
 
+/* ---- 🧠 AI Brain card ---- */
+function paintBrain() {
+  if (!Brain) return;
+  const box = $("brainStats"); if (!box) return;
+  const st = Brain.stats();
+  const wr = st.winRate != null ? Math.round(st.winRate * 100) + "%" : "—";
+  box.innerHTML = [
+    [t("brain.lessons"), st.n],
+    [t("bot.stat.win"), wr],
+    [t("brain.hist"), st.hs],
+    [t("brain.factors2"), Brain.FEATURES.length],
+  ].map(([k, v]) => `<div class="metric"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("");
+  const top = Brain.FEATURES.map(([id]) => ({ id, w: st.w[id] || 0 }))
+    .sort((a, b2) => Math.abs(b2.w) - Math.abs(a.w)).slice(0, 6);
+  $("brainWeights").innerHTML = top.map((e) => {
+    const pct = Math.min(100, (Math.abs(e.w) / 3) * 100);
+    return `<div class="sm-kv"><span>${esc(t("brain.f." + e.id))}</span>` +
+      `<span class="sm-hist"><i style="width:${Math.max(10, pct)}px;height:10px;background:${e.w >= 0 ? "var(--up)" : "var(--dn)"}"></i><b class="small"> ${e.w >= 0 ? "+" : ""}${e.w.toFixed(2)}</b></span></div>`;
+  }).join("");
+  const chip = $("brainChip");
+  if (chip) chip.textContent = (botCfg().strategy === "brain" ? "✓ " : "") + t("brain.lessons") + " " + (st.n + st.hs);
+  const note = $("brainNote");
+  if (note) note.textContent = t("brain.note");
+}
+
 /* ---- 24/7 status card (bot tab) ---- */
 function paint247() {
   const chip = $("btBgChip"); if (!chip) return;
@@ -2073,6 +2143,7 @@ function paintBot() {
   $("botStop").disabled = !b.running;
   paintBotSymbols();
   paintBotStats();
+  paintBrain();
   const box = $("botLog");
   box.innerHTML = b.log.map((l) => `<div class="${l.cls}"><span class="t">${fmtClock(l.ts)}</span>${esc(l.msg)}</div>`).join("");
   box.scrollTop = box.scrollHeight;
@@ -2175,7 +2246,25 @@ async function testKeys() {
 /* ============================================================================
  * I18N APPLY + EVENT WIRING
  * ========================================================================== */
+function fillBotSelects() {
+  const bs = $("bStrat");
+  if (bs) {
+    const cur = bs.value || botCfg().strategy;
+    bs.innerHTML = [["brain", "bot.strat.brain"], ["signal", "bot.strat.signal"], ["trend", "bot.strat.trend"],
+      ["revert", "bot.strat.revert"], ["breakout", "bot.strat.breakout"]]
+      .map(([v, k]) => `<option value="${v}">${t(k)}</option>`).join("");
+    bs.value = cur;
+  }
+  const btf = $("bTf");
+  if (btf) {
+    const cur2 = btf.value || botCfg().tf;
+    btf.innerHTML = TFS.map((x) => `<option value="${x}">${x}</option>`).join("");
+    btf.value = cur2;
+  }
+}
+
 function applyI18n() {
+  fillBotSelects();
   document.querySelectorAll("[data-i18n]").forEach((n) => {
     const k = n.dataset.i18n, s = t(k);
     if (s && s !== k) n.textContent = s;
@@ -2304,6 +2393,21 @@ function bindUI() {
 
   // bot
   $("bStrat").onchange = (e) => { botCfg().strategy = e.target.value; save(); paintBot(); };
+  const bTrain = $("brainTrain");
+  if (bTrain) bTrain.onclick = async () => {
+    const tf = botCfg().tf;
+    let k = state.klines && state.klines.length > 250 && state.tf === tf ? state.klines : (state.klinesCache[state.sym + "|" + tf] || {}).candles;
+    if (!k || k.length < 200) k = await fetchKlinesSmart(state.sym, tf, 500);
+    if (!k || k.length < 200) { toast(t("brain.needK"), "bad"); return; }
+    toast(t("brain.training"), "", 1200);
+    await sleep(60);
+    const r = Brain.trainHistory(k);
+    toast(t("brain.trained").replace("{n}", String(r.signals)).replace("{p}", String(Math.round(r.acc * 100))), "ok");
+    logLine("🧠 " + t("brain.trained").replace("{n}", String(r.signals)).replace("{p}", String(Math.round(r.acc * 100))), "ai");
+    paintBrain();
+  };
+  const bReset3 = $("brainReset");
+  if (bReset3) bReset3.onclick = () => openOk(t("brain.reset"), t("brain.resetBody"), () => { Brain.reset(); paintBrain(); toast(t("saved"), "ok"); });
   $("bTf").onchange = (e) => { botCfg().tf = e.target.value; save(); };
   [["bSize", "size"], ["bTp", "tp"], ["bSl", "sl"], ["bMaxPos", "maxPos"], ["bCool", "cooldown"], ["bDaily", "dailyLoss"],
     ["bDayT", "dayTarget"], ["bMaxHold", "maxHoldDays"], ["bMaxLoss", "maxHoldLoss"],
@@ -2422,6 +2526,7 @@ function bindUI() {
  * ========================================================================== */
 function init() {
   TA = (typeof window !== "undefined" && window.TA) || null;
+  Brain = (typeof window !== "undefined" && window.Brain) || null;
   load();
   if (!state.paper) state.paper = freshPaper();
   if (!state.botCfg) botCfg();
