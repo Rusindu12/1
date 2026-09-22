@@ -16,6 +16,11 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  /* 📚 Huntraders knowledge engine (patterns.js) — candlestick + chart patterns */
+  let Patterns = null;
+  try { Patterns = (typeof self !== "undefined" && self.Patterns) || (typeof module !== "undefined" && module.exports && require("./patterns.js")) || null; }
+  catch (e) { Patterns = null; }
+
   /* ------------------------------------------------- feature definitions -- */
   /* id + human label (app maps ids → i18n) — values normalized to [-1, +1]  */
   const FEATURES = [
@@ -31,6 +36,10 @@
     ["structure", "Higher-highs / lower-lows"],
     ["candle",    "Last-3 candle strength"],
     ["btcCtx",    "BTC market context"],
+    ["cndlBull",  "Huntraders: bullish candlestick pattern"],
+    ["cndlBear",  "Huntraders: bearish candlestick pattern"],
+    ["chartBull", "Huntraders: bullish chart pattern"],
+    ["chartBear", "Huntraders: bearish chart pattern"],
   ];
 
   /* seeded priors — trend-following bias, refined by training */
@@ -38,6 +47,8 @@
     trendEma: 1.0, trendSlow: 0.8, trendPx: 0.6, macd: 0.8, rsi: 0.5,
     stoch: 0.4, bbPos: 0.2, volX: 0.5, atr: -0.3, structure: 0.6,
     candle: 0.3, btcCtx: 0.7,
+    /* 📚 book priors: "Chart patterns give the most reliable trading signals" */
+    cndlBull: 0.8, cndlBear: 0.8, chartBull: 1.0, chartBear: 1.0,
   };
 
   const LSKEY = "cryptoai.brain.v1";
@@ -172,6 +183,16 @@
     const bc = ctx && ctx.btcChg != null ? Number(ctx.btcChg) : 0;
     f.btcCtx    = Math.max(-1, Math.min(1, bc / 4));                    /* ±4% BTC day = strong context */
 
+    /* 📚 Huntraders pattern knowledge (candlesticks + chart formations) */
+    f.cndlBull = f.cndlBear = f.chartBull = f.chartBear = 0;
+    if (Patterns) {
+      try {
+        const p = Patterns.detect(klines);
+        f.cndlBull = p.bull; f.cndlBear = -p.bear;              /* signed: bearish pushes short */
+        f.chartBull = p.chartBull; f.chartBear = -p.chartBear;
+      } catch (e) { /* pattern engine hiccup — indicators still stand */ }
+    }
+
     return f;
   }
 
@@ -244,6 +265,7 @@
 
   return {
     FEATURES, features, decide, learn, trainHistory, stats, reset,
+    patterns: () => Patterns,
     _state: S,
   };
 });

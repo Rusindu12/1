@@ -75,7 +75,7 @@ const STR = {
     "brain.f.trendEma": "EMA trend (fast)", "brain.f.trendSlow": "Big trend (slow)", "brain.f.trendPx": "Price vs EMA",
     "brain.f.macd": "MACD momentum", "brain.f.rsi": "RSI momentum", "brain.f.stoch": "Stochastic",
     "brain.f.bbPos": "Bollinger position", "brain.f.volX": "Volume conviction", "brain.f.atr": "Volatility (risk)",
-    "brain.f.structure": "HH/HL structure", "brain.f.candle": "Candle strength", "brain.f.btcCtx": "BTC market pull",
+    "brain.f.structure": "HH/HL structure", "brain.f.candle": "Candle strength", "brain.f.btcCtx": "BTC market pull", "brain.f.cndlBull": "📚 Bullish candlestick", "brain.f.cndlBear": "📚 Bearish candlestick", "brain.f.chartBull": "📚 Bullish chart pattern", "brain.f.chartBear": "📚 Bearish chart pattern", "brain.books2": "Book patterns",
     "mp.target": "🎯 Daily profit target reached — bot resting", "mp.dca": "Auto-DCA · averaging down",
     "mp.volskip": "Crash guard — entry skipped", "mp.brake": "Emergency exit (max hold)",
     "bot.entry": "Entry strength (signal score 5–40; lower = more trades)", "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
@@ -189,7 +189,7 @@ const STR = {
     "brain.f.trendEma": "EMA ප්‍රවණතාව", "brain.f.trendSlow": "ලොකු ප්‍රවණතාව", "brain.f.trendPx": "මිල vs EMA",
     "brain.f.macd": "MACD ගම්‍යතාව", "brain.f.rsi": "RSI ගම්‍යතාව", "brain.f.stoch": "Stochastic",
     "brain.f.bbPos": "Bollinger තත්ත්වය", "brain.f.volX": "Volume විශ්වාසය", "brain.f.atr": "වාෂ්පශීලීනාත්වය",
-    "brain.f.structure": "ව්‍යුහය (HH/HL)", "brain.f.candle": "Candle ශක්තිය", "brain.f.btcCtx": "BTC ඇදීම",
+    "brain.f.structure": "ව්‍යුහය (HH/HL)", "brain.f.candle": "Candle ශක්තිය", "brain.f.btcCtx": "BTC ඇදීම", "brain.f.cndlBull": "📚 Bullish candlestick", "brain.f.cndlBear": "📚 Bearish candlestick", "brain.f.chartBull": "📚 Bullish chart pattern", "brain.f.chartBear": "📚 Bearish chart pattern", "brain.books2": "Book patterns",
     "mp.target": "🎯 දෛනික ඉලක්කය ලැබුණා — bot එක අදට විවේකයි", "mp.dca": "Auto-DCA · average අඩු කරනවා",
     "mp.volskip": "Crash guard — entry එක skip කළා", "mp.brake": "හදිසි පිටවීම (max hold)",
     "bot.entry": "Entry ශක්තිය (score 5–40; අඩු නම් trades වැඩියි)", "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
@@ -1967,6 +1967,14 @@ async function botEvalSymbol(sym, cfg) {
   const r = openPaper(sym, price, cfg.size, cfg.tp, cfg.sl, "bot", dir);
   if (r.error) { logLine(sym + ": " + (r.error === "insufficient" ? t("trade.insufficient") : r.error), "bad"); return; }
   if (brainF && r.pos) { r.pos.brain = brainF; save(); }   /* remember WHY we entered → learn on close */
+  try {   /* 📚 which book patterns fired for this entry */
+    const Pat = (typeof Patterns !== "undefined") ? Patterns : (Brain.patterns && Brain.patterns());
+    if (Pat) {
+      const p = Pat.detect(klines);
+      const names = p.hit.filter((x) => x.side === dir && x.v >= 0.35).slice(0, 2).map((x) => x.name + " (" + (x.rel >= 1 ? "High" : x.rel >= 0.75 ? "Moderate" : "Low") + ")");
+      if (names.length) logLine("📚 " + names.join(" + ") + " — Huntraders", "ai");
+    }
+  } catch (e) {}
   b.lastEntry[sym] = now();
   notify(t("trade.placed"),
     `${dir > 0 ? "BUY" : "SHORT"} ${cfg.size} USDT ${sym.replace("USDT", "/USDT")} @ ${fmtPrice(price)}\nTP ${fmtPrice(r.pos.tp)} · SL ${fmtPrice(r.pos.sl)}`,
@@ -2079,11 +2087,12 @@ function paintBrain() {
   const box = $("brainStats"); if (!box) return;
   const st = Brain.stats();
   const wr = st.winRate != null ? Math.round(st.winRate * 100) + "%" : "—";
+  const patCount = (Brain.patterns() && Brain.patterns().CATALOG) ? Brain.patterns().CATALOG.length : 0;
   box.innerHTML = [
     [t("brain.lessons"), st.n],
     [t("bot.stat.win"), wr],
     [t("brain.hist"), st.hs],
-    [t("brain.factors2"), Brain.FEATURES.length],
+    [t("brain.books2"), patCount + " 📚"],
   ].map(([k, v]) => `<div class="metric"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`).join("");
   const top = Brain.FEATURES.map(([id]) => ({ id, w: st.w[id] || 0 }))
     .sort((a, b2) => Math.abs(b2.w) - Math.abs(a.w)).slice(0, 6);

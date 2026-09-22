@@ -25,10 +25,12 @@ web/                      # මේ තමයි ඒ terminal එකම web versi
 | 🕯️ **Chart** | candlestick + EMA 20/50, Bollinger, volume, RSI(14), drag-inspect, TF 1m…1d |
 | 🎯 **Signal** | STRONG BUY…STRONG SELL verdict + confidence, reasons, 12 indicators, ATR entry/target/stop, 500-candle backtest, 4-timeframe agreement |
 | 💱 **Trade** | paper mode (10,000 USDT, 0.1% fee, long/short, TP/SL, limit) + live (Binance/Bybit, keys signed on-device) |
-| 🤖 **Bot** | 4 strategies (AI signal / trend / reversion / breakout), multi-symbol, risk limits, daily-loss stop |
+| 🤖 **Bot** | 5 strategies (🧠 AI brain / AI signal / trend / reversion / breakout), multi-symbol, risk limits, daily-loss stop |
 | 🖥️ **System** | **Real-time මෙහෙයුම් එන්ජිම** — Process / Memory / Device / File / Security / Network management |
 
 - **Account/keys ඕන නෑ** — prices, signals, charts, paper trading ඔක්කොම free.
+- 🧠 **Self-learning AI brain (v37+)** — 16 factors (indicators 12 + 📚 Huntraders pattern knowledge 4) online-learn කරනවා: හැම trade close එකකදීම outcome එකෙන් weights adapt වෙනවා, trade history trainer එකෙන් bulk-train කරන්නත් පුළුවන්.
+- 📚 **Huntraders book knowledge (v38)** — huntraders.com/books වල public pattern definitions (candlestick 24 + chart patterns 8, book reliability ratings High/Moderate/Low සමඟ) detection engine එකක් විදිහට encode කරලා brain එකට feed කරනවා. Book ratings = starting priors විතරයි — live outcomes මොනවා actually pay කරන්නේද කියලා brain එක තමන්ම ඉගෙන ගන්නවා.
 - Exchange එකක් reach කරන්න බැරි වුණොත් clearly-labelled **simulated demo data** වලින් වැඩ කරනවා.
 - Live trading සඳහා: trading-enabled, **withdrawal-disabled** API keys — secret එක phone එකෙන් පිටවෙන්නේ නෑ.
 - ⚠️ Educational tool — financial advice එකක් නෙවෙයි.
