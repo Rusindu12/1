@@ -1889,11 +1889,24 @@ function aiTarget(rep, klines, brainScore, brainTh) {
 function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
   if (cfg.aiTp === false) return;
   const px = klines[klines.length - 1].c, m = rep.metrics;
-  const mine = paper().positions.filter((x) => x.sym === sym && x.aiTpPct != null && (x.src === "bot" || x.src === "bot-dca"));
-  const live = (b.livePos || []).filter((x) => x.sym === sym && x.aiTpPct != null);
-  const all = mine.concat(live);
-  if (!all.length) return;
+  const mine = paper().positions.filter((x) => x.sym === sym && (x.src === "bot" || x.src === "bot-dca"));
+  const live = (b.livePos || []).filter((x) => x.sym === sym);
+  if (!mine.length && !live.length) return;
   const fresh = aiTarget(rep, klines, b._brainScore, brainTh);
+  /* v42: adopt trades opened EARLIER (before the AI rate existed, or with the chip off) —
+     they get an AI sell rate too and are managed from now on */
+  for (const hp of mine.concat(live)) {
+    if (hp.aiTpPct == null) {
+      hp.aiTpPct = fresh.tpP; hp.aiTp0 = fresh.tpP;
+      if (hp.tp) hp.tp = hp.dir > 0 ? hp.entry * (1 + fresh.tpP / 100) : hp.entry * (1 - fresh.tpP / 100);
+      b._tpLog = b._tpLog || {};
+      if (now() - (b._tpLog["ad" + sym] || 0) > 30000) {
+        b._tpLog["ad" + sym] = now();
+        logLine("🎯 AI rate " + sym + ": old trade adopted · sell rate " + fresh.tpP + "%", "ai");
+      }
+    }
+  }
+  const all = mine.concat(live);
   /* reversal pattern against the held direction? */
   let revName = null;
   try {
@@ -2015,8 +2028,8 @@ async function botEvalSymbol(sym, cfg) {
   }
   const held = paper().positions.filter((x) => x.sym === sym && x.src === "bot");
   const liveHeld = (b.livePos || []).filter((x) => x.sym === sym);
-  /* v41: 🎯 re-tune the sell rate of open AI trades every tick */
-  if ((cfg.strategy === "brain" || cfg.strategy === "all")) {
+  /* v42: 🎯 re-tune the sell rate of ALL open bot trades every tick — any strategy, old + new */
+  if (cfg.aiTp !== false) {
     try { aiAdjustPos(sym, cfg, klines, rep, b, brainTh); } catch (e) {}
   }
   /* 2s cadence: log the verdict only when bias flips or once a minute per symbol */
