@@ -79,7 +79,7 @@ const STR = {
     "mp.target": "🎯 Daily profit target reached — bot resting", "mp.dca": "Auto-DCA · averaging down",
     "mp.volskip": "Crash guard — entry skipped", "mp.brake": "Emergency exit (max hold)",
     "bot.entry": "Entry strength (signal score 5–40; lower = more trades)", "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
-    "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.dcaDrop": "DCA drop %", "bot.dcaMax": "DCA max buys", "bot.volDrop": "Crash drop %", "mp.warn": "⚠️ SL is OFF in this mode: a losing trade is HELD until it recovers to ≥ min profit, then sold. If the market keeps falling the position can stay open for days — higher win-rate, less risk control. Use money you can leave in the market.",
+    "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.aitp": "🎯 AI sell rate", "bot.dcaDrop": "DCA drop %", "bot.dcaMax": "DCA max buys", "bot.volDrop": "Crash drop %", "mp.warn": "⚠️ SL is OFF in this mode: a losing trade is HELD until it recovers to ≥ min profit, then sold. If the market keeps falling the position can stay open for days — higher win-rate, less risk control. Use money you can leave in the market.",
     "conn.live": "live", "conn.demo": "demo data", "conn.off": "offline", "conn.loading": "loading…",
     "sort.vol": "🔥 Top volume", "sort.gain": "📈 Gainers", "sort.loss": "📉 Losers", "sort.fav": "★ Watchlist",
     "demo.note": "⚠ No exchange connection — showing simulated demo data. Signals & bot work, prices are not real.",
@@ -195,7 +195,7 @@ const STR = {
     "mp.target": "🎯 දෛනික ඉලක්කය ලැබුණා — bot එක අදට විවේකයි", "mp.dca": "Auto-DCA · average අඩු කරනවා",
     "mp.volskip": "Crash guard — entry එක skip කළා", "mp.brake": "හදිසි පිටවීම (max hold)",
     "bot.entry": "Entry ශක්තිය (score 5–40; අඩු නම් trades වැඩියි)", "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
-    "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.dcaDrop": "DCA පහළවීම %", "bot.dcaMax": "DCA ගැනීම් ගණන", "bot.volDrop": "Crash %", "mp.warn": "⚠️ මේ mode එකේ SL වැඩ නෑ — loss වෙච්ච trade එක, ආයේත් ලාභ වෙනකම් hold කරලා ඉන්පස්සේ sell වෙනවා. Market එක දිගටම වැටුණොත් position එක දවස් ගානක් open වෙලා තියෙන්න පුළුවන් — win-rate වැඩි නමුත් risk control අඩුයි. Market එකේ තියාගන්න පුළුවන් සල්ලි විතරක් පාවිච්චි කරන්න.",
+    "bot.dca": "Auto-DCA", "bot.vol": "Crash guard", "bot.aitp": "🎯 AI විකුණුම් රේට්", "bot.dcaDrop": "DCA පහළවීම %", "bot.dcaMax": "DCA ගැනීම් ගණන", "bot.volDrop": "Crash %", "mp.warn": "⚠️ මේ mode එකේ SL වැඩ නෑ — loss වෙච්ච trade එක, ආයේත් ලාභ වෙනකම් hold කරලා ඉන්පස්සේ sell වෙනවා. Market එක දිගටම වැටුණොත් position එක දවස් ගානක් open වෙලා තියෙන්න පුළුවන් — win-rate වැඩි නමුත් risk control අඩුයි. Market එකේ තියාගන්න පුළුවන් සල්ලි විතරක් පාවිච්චි කරන්න.",
     "conn.live": "සජීවී", "conn.demo": "නියැදි දත්ත", "conn.off": "නොබැඳි", "conn.loading": "පූරණය…",
     "sort.vol": "🔥 වැඩිම පරිමාව", "sort.gain": "📈 ඉහළ ගිය", "sort.loss": "📉 පහළ ගිය", "sort.fav": "★ මගේ ලැයිස්තුව",
     "demo.note": "⚠ හුවමාරු සම්බන්ධතාවක් නැත — නියැදි (demo) දත්ත පෙන්වයි. සංඥා සහ රොබෝ වැඩ කරයි, මිල සැබෑ නොවේ.",
@@ -374,6 +374,7 @@ function botCfg() {
     strategy: "brain", tf: "15m", size: 50, tp: 1.5, sl: 0.8, symbols: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
     allowShort: false, notify: true, keep: false, maxPos: 3, cooldown: 15, dailyLoss: 50,
     exitMode: "minprofit", minProfit: 0.01,   /* 24/7: sell at ANY net profit, never at a loss */
+    aiTp: true,                                           /* v41: AI sets each trade its own sell rate */
     entryScore: 20,                                       /* LONG entry threshold (signal strategy) */
     dayTarget: 0, maxHoldDays: 0, maxHoldLoss: 25,      /* discipline + emergency brake (0 = off) */
     dca: false, dcaDrop: 3, dcaMax: 1,                  /* auto-DCA recovery booster */
@@ -1420,7 +1421,11 @@ function checkPaperPositions(sym, price) {
       const heldDays = (now() - pos.ts) / 86400000;
       const brakeOn = botCfg().maxHoldDays > 0 && heldDays > botCfg().maxHoldDays &&
         np <= -(Math.abs(botCfg().maxHoldLoss) / 100) * (pos.qty * pos.entry);
-      if (np >= mp || brakeOn) {
+      /* v41: AI trades wait for their per-trade sell rate — always >= min profit, never at a loss */
+      const aiOn = botCfg().aiTp !== false && pos.aiTpPct != null && (pos.src === "bot" || pos.src === "bot-dca");
+      const moveP = ((price - pos.entry) / pos.entry) * 100 * pos.dir;
+      const wantSell = aiOn ? (moveP >= pos.aiTpPct && np >= mp) || brakeOn : (np >= mp || brakeOn);
+      if (wantSell) {
         const r = closePaper(pos.id, price, brakeOn ? "brake" : "profit");
         if (brakeOn) {
           notify("🛑 " + t("mp.brake"), `${pos.sym.replace("USDT", "/USDT")} ${heldDays.toFixed(1)}d · ${fmtUsd(np)}`, "bad");
@@ -1862,6 +1867,76 @@ function allDecide(rep, klines, allowShort, brainTh, bd) {
   return { bias, net, str: votes.map((x) => x.n + arrow(x.v)).join(" "), agree: votes.filter((x) => x.v * bias > 0.05).length + "/" + votes.length };
 }
 
+/* —— v41: 🎯 AI sell rate — every trade gets its OWN target, computed from the
+   market right now: ATR (volatility) base, stretched by EMA trend spread and
+   brain conviction, then re-tuned every tick while the trade is open. —— */
+function aiTarget(rep, klines, brainScore, brainTh) {
+  const m = rep.metrics, px = klines[klines.length - 1].c;
+  const atrP = m.atr && px ? (m.atr / px) * 100 : 0.8;          /* fallback ~0.8% */
+  let tpP = atrP * 1.4, slP = atrP * 0.9;                       /* vol target: TP 1.4xATR, SL 0.9xATR */
+  if (m.ema20 != null && m.ema50 != null) {
+    const spread = Math.abs(m.ema20 - m.ema50) / px * 100;      /* strong trend → ride further */
+    tpP *= 1 + Math.min(0.6, spread / 1.5);
+  }
+  const conv = brainScore != null ? Math.abs(brainScore) / Math.max(brainTh, 0.05) : 1;
+  tpP *= 1 + Math.min(0.5, Math.max(0, conv - 1) * 0.4);        /* high conviction → wider target */
+  tpP = Math.max(0.5, Math.min(8, tpP));
+  slP = Math.max(0.35, Math.min(4, slP));
+  return { tpP: +tpP.toFixed(2), slP: +slP.toFixed(2) };
+}
+
+/* move the sell rate of open AI trades as the market changes (2s cadence) */
+function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
+  if (cfg.aiTp === false) return;
+  const px = klines[klines.length - 1].c, m = rep.metrics;
+  const mine = paper().positions.filter((x) => x.sym === sym && x.aiTpPct != null && (x.src === "bot" || x.src === "bot-dca"));
+  const live = (b.livePos || []).filter((x) => x.sym === sym && x.aiTpPct != null);
+  const all = mine.concat(live);
+  if (!all.length) return;
+  const fresh = aiTarget(rep, klines, b._brainScore, brainTh);
+  /* reversal pattern against the held direction? */
+  let revName = null;
+  try {
+    const Pat = (typeof Patterns !== "undefined") ? Patterns : (Brain && Brain.patterns ? Brain.patterns() : null);
+    if (Pat) {
+      const d = Pat.detect(klines);
+      const rv = d.hit.find((x) => x.v >= 0.35 && x.side === -all[0].dir);
+      if (rv) revName = rv.name;
+    }
+  } catch (e) {}
+  /* profitable floor: fees + min profit + margin — AI can never target a loss */
+  const mpPct = Math.max(0.3, 0.2 + ((cfg.minProfit || 0.01) / Math.max(1, cfg.size || 50)) * 100 + 0.05);
+  const fade = (hp) => (hp.dir > 0 ? (m.macdHist != null && m.macdHist < 0) : (m.macdHist != null && m.macdHist > 0));
+  const rsiX = (hp) => (hp.dir > 0 ? (m.rsi != null && m.rsi > 75) : (m.rsi != null && m.rsi < 25));
+  let changed = false;
+  for (const hp of all) {
+    const move = ((px - hp.entry) / hp.entry) * 100 * hp.dir;
+    let np2, tag;
+    if (revName || fade(hp) || rsiX(hp)) {
+      np2 = mpPct;                                              /* exit soon — just above profit floor */
+      tag = revName || (rsiX(hp) ? "RSI extreme" : "momentum fade");
+    } else if (move > 0) {
+      np2 = Math.max(hp.aiTp0 || fresh.tpP, fresh.tpP);         /* in profit + trend alive → ride */
+      tag = "ATR " + fresh.tpP.toFixed(1) + "%";
+    } else {
+      np2 = hp.aiTp0 || fresh.tpP;                              /* recovering → keep the original target */
+      tag = "hold target";
+    }
+    np2 = Math.max(mpPct, Math.min(8, np2));
+    if (Math.abs(np2 - hp.aiTpPct) < 0.05) continue;            /* noise guard */
+    const oldP = hp.aiTpPct;
+    hp.aiTpPct = +np2.toFixed(2);
+    if (hp.tp) hp.tp = hp.dir > 0 ? hp.entry * (1 + np2 / 100) : hp.entry * (1 - np2 / 100);
+    changed = true;
+    b._tpLog = b._tpLog || {};
+    if (now() - (b._tpLog[sym] || 0) > 30000) {
+      b._tpLog[sym] = now();
+      logLine("🎯 AI sell rate " + sym + ": " + oldP.toFixed(2) + "% → " + np2.toFixed(2) + "% · " + tag, "ai");
+    }
+  }
+  if (changed) save();
+}
+
 async function botTick() {
   const b = bot(), cfg = botCfg();
   if (!b.running) return;
@@ -1940,6 +2015,10 @@ async function botEvalSymbol(sym, cfg) {
   }
   const held = paper().positions.filter((x) => x.sym === sym && x.src === "bot");
   const liveHeld = (b.livePos || []).filter((x) => x.sym === sym);
+  /* v41: 🎯 re-tune the sell rate of open AI trades every tick */
+  if ((cfg.strategy === "brain" || cfg.strategy === "all")) {
+    try { aiAdjustPos(sym, cfg, klines, rep, b, brainTh); } catch (e) {}
+  }
   /* 2s cadence: log the verdict only when bias flips or once a minute per symbol */
   b._vLog = b._vLog || {};
   const vPrev = b._vLog[sym] || {};
@@ -1999,13 +2078,19 @@ async function botEvalSymbol(sym, cfg) {
     return;
   }
 
+  /* v41: 🎯 this trade own sell rate (ATR + trend + conviction) */
+  let tpUse = cfg.tp, slUse = cfg.sl, aiRate = false;
+  if (cfg.aiTp !== false && (cfg.strategy === "brain" || cfg.strategy === "all")) {
+    const at = aiTarget(rep, klines, b._brainScore, brainTh);
+    tpUse = at.tpP; slUse = at.slP; aiRate = true;
+  }
   if (state.settings.liveMode === "live" && canTradeLive()) {
     if (bias < 0) { logLine("spot live mode is long-only — short skipped", "warn"); return; }
     const qty = cfg.size / price;
     const res = await livePlaceOrder(sym, "BUY", qty, price, "MARKET");
     const f = await qtyFilter(sym);
     const q = roundQty(qty, f);
-    (b.livePos = b.livePos || []).push({ sym, qty: q, entry: price, tp: price * (1 + cfg.tp / 100), sl: price * (1 - cfg.sl / 100), ts: now(), id: res.orderId || uid() });
+    (b.livePos = b.livePos || []).push({ sym, qty: q, entry: price, tp: price * (1 + tpUse / 100), sl: price * (1 - slUse / 100), aiTpPct: aiRate ? tpUse : null, aiTp0: aiRate ? tpUse : null, ts: now(), id: res.orderId || uid() });
     b.lastEntry[sym] = now();
     notify(t("trade.placed"), `LIVE BUY ${fmtQty(q)} ${sym.replace("USDT", "/USDT")} @ ${fmtPrice(price)}`, "ok");
     logLine(`live buy ${fmtQty(q)} ${sym} @ ${fmtPrice(price)}`, "ok");
@@ -2013,9 +2098,11 @@ async function botEvalSymbol(sym, cfg) {
   }
 
   const dir = bias > 0 ? 1 : -1;
-  const r = openPaper(sym, price, cfg.size, cfg.tp, cfg.sl, "bot", dir);
+  const r = openPaper(sym, price, cfg.size, tpUse, slUse, "bot", dir);
   if (r.error) { logLine(sym + ": " + (r.error === "insufficient" ? t("trade.insufficient") : r.error), "bad"); return; }
   if (brainF && r.pos) { r.pos.brain = brainF; save(); }   /* remember WHY we entered → learn on close */
+  if (aiRate && r.pos) { r.pos.aiTpPct = tpUse; r.pos.aiTp0 = tpUse; save(); }
+  if (aiRate) logLine("🎯 AI sell rate " + sym + ": TP " + tpUse + "% · SL " + slUse + "% (ATR + conviction)", "ai");
   try {   /* 📚 which book patterns fired for this entry */
     const Pat = (typeof Patterns !== "undefined") ? Patterns : (Brain.patterns && Brain.patterns());
     if (Pat) {
@@ -2038,7 +2125,12 @@ function botOnTick(sym, price) {
     /* —— minprofit mode: sell live only at ≥ min net profit, never at a loss —— */
     if (cfg.exitMode === "minprofit") {
       const np = posNetPnl(p, price);
-      if (np < Math.max(0.01, Number(cfg.minProfit) || 0.01)) return;
+      const mp = Math.max(0.01, Number(cfg.minProfit) || 0.01);
+      /* v41: AI sell rate — hold for this trade own target (>= min profit, never at a loss) */
+      if (p.aiTpPct != null && cfg.aiTp !== false) {
+        const moveP = ((price - p.entry) / p.entry) * 100 * (p.dir || 1);
+        if (!(moveP >= p.aiTpPct && np >= mp)) return;
+      } else if (np < mp) return;
       try {
         await livePlaceOrder(sym, "SELL", p.qty, price, "MARKET");
         notify(t("mp.done"), `LIVE SELL ${fmtQty(p.qty)} ${sym.replace("USDT", "/USDT")} @ ${fmtPrice(price)} · +${fmtUsd(np)}`, "ok");
@@ -2184,6 +2276,7 @@ function paintBot() {
   });
   const bDca = $("bDca"); if (bDca) bDca.classList.toggle("on", !!cfg.dca);
   const bVol = $("bVol"); if (bVol) bVol.classList.toggle("on", cfg.volGuard !== false);
+  const bAiTp = $("bAiTp"); if (bAiTp) bAiTp.classList.toggle("on", cfg.aiTp !== false);
   const exSel = $("bExit");
   if (exSel) exSel.value = cfg.exitMode === "minprofit" ? "minprofit" : "classic";
   const mpIn = $("bMinP");
@@ -2474,6 +2567,7 @@ function bindUI() {
   });
   const bDca2 = $("bDca"); if (bDca2) bDca2.onclick = () => { botCfg().dca = !botCfg().dca; save(); paintBot(); };
   const bVol2 = $("bVol"); if (bVol2) bVol2.onclick = () => { botCfg().volGuard = !(botCfg().volGuard !== false); save(); paintBot(); };
+  const bAiTp2 = $("bAiTp"); if (bAiTp2) bAiTp2.onclick = () => { const c = botCfg(); c.aiTp = c.aiTp === false; save(); paintBot(); };
   const sws = [["bShort", "allowShort"], ["bNotify", "notify"], ["bKeep", "keep"]];
   sws.forEach(([id, k]) => $(id).onclick = () => {
     const cfg = botCfg(); cfg[k] = !cfg[k];
