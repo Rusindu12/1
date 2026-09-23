@@ -1626,7 +1626,7 @@ function paintPositions() {
         <span style="left:${clamp(tpPos, 0, 100)}%;width:2px;background:var(--up)"></span>
         <span style="left:${clamp(at, 0, 100)}%;width:4px;background:var(--gold);margin-left:-2px"></span>
       </div>
-      <div class="row between mt tiny dim"><span>SL ${p.sl ? fmtPrice(p.sl) : "—"}</span><span>TP ${p.tp ? fmtPrice(p.tp) : "—"}</span></div>
+      <div class="row between mt tiny dim"><span>SL ${p.sl ? fmtPrice(p.sl) : "—"}</span><span>${p.aiTpPct != null ? '<span class="up">🎯 AI ' + p.aiTpPct + '%</span>' : ""}</span><span>TP ${p.tp ? fmtPrice(p.tp) : "—"}</span></div>
       <button class="btn ghost sm block mt" data-close="${p.id}">${t("pos.close")}</button>
     </div>`;
   }).join("");
@@ -1889,7 +1889,7 @@ function aiTarget(rep, klines, brainScore, brainTh) {
 function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
   if (cfg.aiTp === false) return;
   const px = klines[klines.length - 1].c, m = rep.metrics;
-  const mine = paper().positions.filter((x) => x.sym === sym && (x.src === "bot" || x.src === "bot-dca"));
+  const mine = paper().positions.filter((x) => x.sym === sym);   /* v43: bot + DCA + manual trades all get the AI rate */
   const live = (b.livePos || []).filter((x) => x.sym === sym);
   if (!mine.length && !live.length) return;
   const fresh = aiTarget(rep, klines, b._brainScore, brainTh);
