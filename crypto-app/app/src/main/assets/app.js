@@ -1445,6 +1445,8 @@ function checkPaperPositions(sym, price) {
       notify(t("trade.tp"), `${pos.sym.replace("USDT", "/USDT")} ${pos.dir > 0 ? "long" : "short"} closed at ${fmtPrice(pos.tp)} · ${r.pnl >= 0 ? "+" : ""}${fmtUsd(r.pnl)}`, "ok");
       paintTrade(); paintBotStats();
     } else if (pos.sl && ((pos.dir > 0 && price <= pos.sl) || (pos.dir < 0 && price >= pos.sl))) {
+      /* v44: never-loss — bot trades ignore SL below min profit (hold for recovery); manual keeps SL */
+      if ((pos.src === "bot" || pos.src === "bot-dca") && posNetPnl(pos, price) < Math.max(0.01, Number(botCfg().minProfit) || 0.01)) return;
       const r = closePaper(pos.id, pos.sl, "SL");
       notify(t("trade.sl"), `${pos.sym.replace("USDT", "/USDT")} ${pos.dir > 0 ? "long" : "short"} stopped at ${fmtPrice(pos.sl)} · ${fmtUsd(r.pnl)}`, "bad");
       paintTrade(); paintBotStats();
@@ -1626,7 +1628,7 @@ function paintPositions() {
         <span style="left:${clamp(tpPos, 0, 100)}%;width:2px;background:var(--up)"></span>
         <span style="left:${clamp(at, 0, 100)}%;width:4px;background:var(--gold);margin-left:-2px"></span>
       </div>
-      <div class="row between mt tiny dim"><span>SL ${p.sl ? fmtPrice(p.sl) : "—"}</span><span>${p.aiTpPct != null ? '<span class="up">🎯 AI ' + p.aiTpPct + '%</span>' : ""}</span><span>TP ${p.tp ? fmtPrice(p.tp) : "—"}</span></div>
+      <div class="row between mt tiny dim"><span>SL ${p.sl ? fmtPrice(p.sl) : "—"}</span><span>${p.aiTpPct != null ? '<span class="up">🎯 AI ' + p.aiTpPct + (p.peakMove >= Math.max(0.5, (p.aiTp0 || p.aiTpPct) * 0.5) ? " 🔒" : "") + '%</span>' : ""}</span><span>TP ${p.tp ? fmtPrice(p.tp) : "—"}</span></div>
       <button class="btn ghost sm block mt" data-close="${p.id}">${t("pos.close")}</button>
     </div>`;
   }).join("");
@@ -1924,10 +1926,16 @@ function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
   let changed = false;
   for (const hp of all) {
     const move = ((px - hp.entry) / hp.entry) * 100 * hp.dir;
+    /* v44: track peak profit — once meaningful profit showed up, never let it round-trip away */
+    hp.peakMove = Math.max(hp.peakMove || 0, +move.toFixed(3));
+    const lockAt = Math.max(0.5, (hp.aiTp0 || fresh.tpP) * 0.5);
     let np2, tag;
     if (revName || fade(hp) || rsiX(hp)) {
       np2 = mpPct;                                              /* exit soon — just above profit floor */
       tag = revName || (rsiX(hp) ? "RSI extreme" : "momentum fade");
+    } else if (hp.peakMove >= lockAt && move <= mpPct * 1.6) {
+      np2 = mpPct;                                              /* 🔒 profit lock — bank it at the floor */
+      tag = "profit lock " + hp.peakMove.toFixed(1) + "%";
     } else if (move > 0) {
       np2 = Math.max(hp.aiTp0 || fresh.tpP, fresh.tpP);         /* in profit + trend alive → ride */
       tag = "ATR " + fresh.tpP.toFixed(1) + "%";
@@ -2044,7 +2052,8 @@ async function botEvalSymbol(sym, cfg) {
 
   // exits on a flip
   if (bias <= 0 && held.length && held[0].dir > 0) {
-    if (cfg.exitMode === "minprofit" && posNetPnl(held[0], price) < (cfg.minProfit || 0.01)) {
+    /* v44: never-loss — bot trades are NEVER closed at a loss, any exit mode */
+    if (posNetPnl(held[0], price) < (cfg.minProfit || 0.01)) {
       logLine(sym + " flip — hold for profit recovery (" + fmtUsd(posNetPnl(held[0], price)) + ")", "warn");
       return;
     }
@@ -2053,7 +2062,8 @@ async function botEvalSymbol(sym, cfg) {
     return;
   }
   if (bias >= 0 && held.length && held[0].dir < 0) {
-    if (cfg.exitMode === "minprofit" && posNetPnl(held[0], price) < (cfg.minProfit || 0.01)) {
+    /* v44: never-loss — bot trades are NEVER closed at a loss, any exit mode */
+    if (posNetPnl(held[0], price) < (cfg.minProfit || 0.01)) {
       logLine(sym + " flip — hold for profit recovery (" + fmtUsd(posNetPnl(held[0], price)) + ")", "warn");
       return;
     }
