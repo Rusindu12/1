@@ -166,5 +166,34 @@ SBA.botCfg().exitMode = "minprofit";
 t("v44: flip exits never-loss (no exitMode gate)", !code["app.js"].includes('cfg.exitMode === "minprofit" && posNetPnl'));
 t("v44: 🔒 badge in UI", code["app.js"].includes("🔒"));
 
+// ===== v45: smarter brain =====
+Brain.reset();
+const fS = { trendEma: 1.7 };                        /* score = 1.0*1.7/10.3 ≈ 0.165 (seed weights) */
+t("v45: baseline entry above 0.15", Brain.decide(fS, 0.15).bias === 1 && Math.abs(Brain.decide(fS,0.15).score - 0.165) < 0.01);
+Brain.learn(fS, -1, 1); Brain.learn(fS, -1, 1);      /* two losses in a row */
+t("v45: streak = -2 after 2 losses", Brain.stats().streak === -2);
+t("v45: discipline → same signal now below stricter bar", Brain.decide(fS, 0.15).bias === 0 && Brain.decide(fS, 0.15).t >= 0.19);
+Brain.learn(fS, 1, 1); Brain.learn(fS, 1, 1); Brain.learn(fS, 1, 1);
+t("v45: 3-win streak loosens threshold", Brain.decide(fS, 0.15).t <= 0.13);
+// weighted lessons: big weight moves weight more
+Brain.reset();
+const fW = { rsi: 1 };
+const w0 = Brain.stats().w.rsi;
+Brain.learn(fW, -1, 0.5); const wSmall = Brain.stats().w.rsi - w0;
+Brain.reset();
+Brain.learn(fW, -1, 2.5); const wBig = Brain.stats().w.rsi - w0;
+t("v45: lesson weight scales the update", Math.abs(wBig) > Math.abs(wSmall) * 3);
+// pnl tracking
+Brain.reset();
+Brain.learn(fW, 1, 1, 2.5); Brain.learn(fW, -1, 1, -0.5);
+t("v45: avgPnl tracked", Math.abs(Brain.stats().avgPnl - 1.0) < 0.001);
+t("v45: stats expose streak", typeof Brain.stats().streak === "number");
+// app wiring
+t("v45: weighted close lesson wired", code["app.js"].includes("Brain.learn(pos.brain, pnl > 0 ? 1 : -1, w, pnl)"));
+t("v45: brainScore stored at entry", code["app.js"].includes("r.pos.brainScore = b._brainScore"));
+t("v45: auto-train at bot start", code["app.js"].includes("auto history training"));
+t("v45: chip shows win rate", code["app.js"].includes('Math.round(st.winRate * 100)'));
+Brain.reset();
+
 console.log(fails ? "\n"+fails+" FAILURES" : "\n🎉 ALL REGRESSION TESTS PASS");
 process.exit(fails?1:0);

@@ -76,6 +76,8 @@
     hs: 0, hCorrect: 0,                /* history-training lessons */
     trainedAt: 0,
   }, load() || {});
+  S.streak = typeof S.streak === "number" ? S.streak : 0;   /* v45: win/loss streak */
+  S.pnlSum = typeof S.pnlSum === "number" ? S.pnlSum : 0;   /* v45: total USDT from brain trades */
   if (!S.w || typeof S.w !== "object") S.w = Object.assign({}, SEED);
   FEATURES.forEach(([id]) => { if (typeof S.w[id] !== "number") S.w[id] = SEED[id] || 0; });
 
@@ -202,19 +204,28 @@
     let num = 0, den = 0;
     FEATURES.forEach(([id]) => { num += (S.w[id] || 0) * (f[id] || 0); den += Math.abs(S.w[id] || 0); });
     const score = den > 0 ? num / den : 0;
-    const t = th != null ? th : 0.2;
-    return { score, bias: score >= t ? 1 : score <= -t ? -1 : 0 };
+    let t = th != null ? th : 0.2;
+    /* v45: discipline — after 2+ straight losses demand a stronger signal;
+       on a 3+ win streak trade slightly looser (confidence) */
+    if (S.streak <= -2) t = Math.min(0.4, t + 0.04);
+    else if (S.streak >= 3) t = Math.max(0.05, t - 0.02);
+    return { score, t, bias: score >= t ? 1 : score <= -t ? -1 : 0 };
   }
 
   /* ------------------------------------------------------------- learning -- */
-  function learn(f, outcome) {
+  /* v45: outcome-weighted lessons — big wins/losses and high-conviction calls
+     teach more; streak tracks consecutive wins(+) / losses(−) for discipline */
+  function learn(f, outcome, weight, pnlUsd) {
     if (!f) return;
+    const w = weight != null ? Math.max(0.3, Math.min(2.5, weight)) : 1;
     FEATURES.forEach(([id]) => {
       const x = f[id] || 0;
-      if (x !== 0) S.w[id] = Math.max(-WCLAMP, Math.min(WCLAMP, (S.w[id] || 0) + LR * outcome * x));
+      if (x !== 0) S.w[id] = Math.max(-WCLAMP, Math.min(WCLAMP, (S.w[id] || 0) + LR * w * outcome * x));
     });
     S.n++;
-    if (outcome > 0) S.wins++; else S.losses++;
+    if (outcome > 0) { S.wins++; S.streak = S.streak >= 0 ? S.streak + 1 : 1; }
+    else { S.losses++; S.streak = S.streak <= 0 ? S.streak - 1 : -1; }
+    if (typeof pnlUsd === "number") S.pnlSum += pnlUsd;
     persist();
   }
 
@@ -255,11 +266,13 @@
     return {
       n: S.n, wins: S.wins, losses: S.losses,
       winRate: total ? S.wins / total : null,
+      streak: S.streak || 0,
+      avgPnl: total ? S.pnlSum / total : null,      /* v45: avg USDT per brain trade */
       hs: S.hs, trainedAt: S.trainedAt, w: snapshot().w,
     };
   }
   function reset() {
-    S.w = Object.assign({}, SEED); S.n = 0; S.wins = 0; S.losses = 0; S.hs = 0; S.hCorrect = 0; S.trainedAt = 0;
+    S.w = Object.assign({}, SEED); S.n = 0; S.wins = 0; S.losses = 0; S.hs = 0; S.hCorrect = 0; S.trainedAt = 0; S.streak = 0; S.pnlSum = 0;
     persist();
   }
 

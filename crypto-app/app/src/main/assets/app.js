@@ -1404,8 +1404,16 @@ function closePaper(posId, price, reason) {
     bot.stats.pnl += pnl;
   }
   save();
-  /* 🧠 brain lesson: win or loss — update feature weights */
-  try { if (pos.brain && Brain) Brain.learn(pos.brain, pnl > 0 ? 1 : -1); } catch (e) {}
+  /* 🧠 brain lesson: win or loss — v45 weighted: big PnL + high-conviction entries teach more */
+  try {
+    if (pos.brain && Brain) {
+      const thE = Math.max(0.05, Math.min(0.4, (Number(botCfg().entryScore) || 20) / 100));
+      const conv = pos.brainScore != null ? Math.abs(pos.brainScore) / thE : 1;
+      const mag = Math.abs(pnl / Math.max(1, pos.qty * pos.entry)) * 100;   /* % return */
+      const w = Math.max(0.5, Math.min(2, (0.5 + mag * 0.5) * (0.6 + 0.4 * Math.min(2, conv))));
+      Brain.learn(pos.brain, pnl > 0 ? 1 : -1, w, pnl);
+    }
+  } catch (e) {}
   return { ok: true, pnl };
 }
 function closePaperAll(sym, price, reason) {
@@ -2123,7 +2131,7 @@ async function botEvalSymbol(sym, cfg) {
   const dir = bias > 0 ? 1 : -1;
   const r = openPaper(sym, price, cfg.size, tpUse, slUse, "bot", dir);
   if (r.error) { logLine(sym + ": " + (r.error === "insufficient" ? t("trade.insufficient") : r.error), "bad"); return; }
-  if (brainF && r.pos) { r.pos.brain = brainF; save(); }   /* remember WHY we entered → learn on close */
+  if (brainF && r.pos) { r.pos.brain = brainF; if (b._brainScore != null) r.pos.brainScore = b._brainScore; save(); }   /* remember WHY we entered → learn on close */
   if (aiRate && r.pos) { r.pos.aiTpPct = tpUse; r.pos.aiTp0 = tpUse; save(); }
   if (aiRate) logLine("🎯 AI sell rate " + sym + ": TP " + tpUse + "% · SL " + slUse + "% (ATR + conviction)", "ai");
   try {   /* 📚 which book patterns fired for this entry */
@@ -2190,6 +2198,23 @@ function botStart() {
   if (b.loop) clearInterval(b.loop);
   b.loop = setInterval(botTick, 2000);   /* v40: scan every 2s */
   logLine("── bot started · " + cfg.strategy + " · " + cfg.tf + " · ⏱2s scan · " + cfg.symbols.join(", ") + " ──", "ok");
+  /* v45: auto history training — the brain starts every session with backtested
+     experience instead of waiting for live trades to teach it */
+  if (!b._autoTrainAt || now() - b._autoTrainAt > 3600000) {
+    b._autoTrainAt = now();
+    (async () => {
+      try {
+        for (const s of cfg.symbols.slice(0, 3)) {
+          const k = await fetchKlinesSmart(s, cfg.tf, 500);
+          if (k && k.length >= 260) {
+            const r = Brain.trainHistory(k);
+            logLine("🧠 auto-train " + s + " " + cfg.tf + ": +" + r.signals + " lessons (" + Math.round(r.acc * 100) + "% acc)", "ai");
+          }
+        }
+        paintBrain();
+      } catch (e) {}
+    })();
+  }
   notify(t("bot.started"), cfg.strategy + " · " + cfg.symbols.length + " pairs", "ok");
   paintBot(); paintBotStats(); paint247();
   setTimeout(botTick, 1200);
@@ -2266,7 +2291,7 @@ function paintBrain() {
       `<span class="sm-hist"><i style="width:${Math.max(10, pct)}px;height:10px;background:${e.w >= 0 ? "var(--up)" : "var(--dn)"}"></i><b class="small"> ${e.w >= 0 ? "+" : ""}${e.w.toFixed(2)}</b></span></div>`;
   }).join("");
   const chip = $("brainChip");
-  if (chip) chip.textContent = ((botCfg().strategy === "brain" || botCfg().strategy === "all") ? "✓ " : "") + t("brain.lessons") + " " + (st.n + st.hs);
+  if (chip) chip.textContent = ((botCfg().strategy === "brain" || botCfg().strategy === "all") ? "✓ " : "") + t("brain.lessons") + " " + (st.n + st.hs) + (st.winRate != null ? " · " + Math.round(st.winRate * 100) + "%" : "");
   const note = $("brainNote");
   if (note) note.textContent = t("brain.note");
 }
