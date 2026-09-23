@@ -75,7 +75,7 @@ const STR = {
     "brain.f.trendEma": "EMA trend (fast)", "brain.f.trendSlow": "Big trend (slow)", "brain.f.trendPx": "Price vs EMA",
     "brain.f.macd": "MACD momentum", "brain.f.rsi": "RSI momentum", "brain.f.stoch": "Stochastic",
     "brain.f.bbPos": "Bollinger position", "brain.f.volX": "Volume conviction", "brain.f.atr": "Volatility (risk)",
-    "brain.f.structure": "HH/HL structure", "brain.f.candle": "Candle strength", "brain.f.btcCtx": "BTC market pull", "brain.f.cndlBull": "📚 Bullish candlestick", "brain.f.cndlBear": "📚 Bearish candlestick", "brain.f.chartBull": "📚 Bullish chart pattern", "brain.f.chartBear": "📚 Bearish chart pattern", "brain.books2": "Book patterns",
+    "brain.f.structure": "HH/HL structure", "brain.f.candle": "Candle strength", "brain.f.btcCtx": "BTC market pull", "brain.f.cndlBull": "📚 Bullish candlestick", "brain.f.cndlBear": "📚 Bearish candlestick", "brain.f.chartBull": "📚 Bullish chart pattern", "brain.f.chartBear": "📚 Bearish chart pattern", "brain.f.mtfAlign": "⏱ Higher-TF trend", "brain.f.trendStr": "💪 Trend quality", "brain.books2": "Book patterns",
     "mp.target": "🎯 Daily profit target reached — bot resting", "mp.dca": "Auto-DCA · averaging down",
     "mp.volskip": "Crash guard — entry skipped", "mp.brake": "Emergency exit (max hold)",
     "bot.entry": "Entry strength (signal score 5–40; lower = more trades)", "bot.dayT": "Daily profit target USDT (0 = off)", "bot.maxHold": "Max hold days (0 = off)", "bot.maxLoss": "Brake loss %",
@@ -117,7 +117,7 @@ const STR = {
     "bot.strat.all": "🧠✦ All Together (5-in-1 consensus)",
     "bot.strat.brain": "🧠 AI Brain (self-learning)",
     "bot.desc.all": "All 5 strategies vote together — AI Brain (top weight, it learns), AI signal, Trend, Mean reversion, Breakout. Enters only when the weighted consensus agrees — fewer trades, higher confidence.",
-    "bot.desc.brain": "Analyzes 12 market factors every tick and trades on the combined score. Learns from every closed trade (win/loss) and from history training — weights keep adapting.",
+    "bot.desc.brain": "Analyzes 18 market factors every tick and trades on the combined score. Learns from every closed trade (win/loss) and from history training — weights keep adapting.",
     "bot.strat.signal": "AI signal (trend + oscillators)",
     "bot.strat.trend": "Trend follower (EMA cross + MACD)",
     "bot.strat.revert": "Mean reversion (RSI extremes)",
@@ -182,7 +182,7 @@ const STR = {
     "bot24.tips": "Xiaomi/Huawei/Oppo: Settings → Autostart ON + Battery → No restrictions. ඔයා ඈත හිටියත් trades & TP/SL notifications එනවා.",
     "mp.mode": "ඉවත්වීමේ ක්‍රමය", "mp.classic": "සම්භාව්‍ය (TP/SL)", "mp.minprofit": "✅ සතයක් හරි ලාභයි නම් sell — loss වෙලා විකුණන්නේ නෑ", "mp.min": "අවම ලාභය (USDT, fees අඩුවෙලා)",
     "mp.done": "ලාභය අරගත්තා ✅",
-    "brain.title": "AI Brain", "brain.desc": "Market factors 12ක් (ප්‍රවණතාව, ගම්‍යතාව, වාෂ්පශීලීනාත්වය, volume, ව්‍යුහය, BTC සන්දර්භය) analyze කරලා — හැම trade ප්‍රතිඵලයකින්ම ඉගෙන ගන්නවා. History training එකෙන් instant අත්දැකීම්.",
+    "brain.title": "AI Brain", "brain.desc": "Market factors 18ක් (ප්‍රවණතාව, ගම්‍යතාව, වාෂ්පශීලීනාත්වය, volume, ව්‍යුහය, BTC සන්දර්භය) analyze කරලා — හැම trade ප්‍රතිඵලයකින්ම ඉගෙන ගන්නවා. History training එකෙන් instant අත්දැකීම්.",
     "brain.lessons": "පාඩම්", "brain.hist": "History training", "brain.factors2": "Factors",
     "brain.train": "History එකෙන් train කරන්න", "brain.reset": "Reset",
     "brain.training": "🧠 candles 500ක් උඩ train වෙමින්…", "brain.trained": "🧠 ඓතිහාසික signals {n}ක් උඩ train වුණා · {p}% ලාභයි — weights යාවත්කාලීන වුණා",
@@ -191,7 +191,7 @@ const STR = {
     "brain.f.trendEma": "EMA ප්‍රවණතාව", "brain.f.trendSlow": "ලොකු ප්‍රවණතාව", "brain.f.trendPx": "මිල vs EMA",
     "brain.f.macd": "MACD ගම්‍යතාව", "brain.f.rsi": "RSI ගම්‍යතාව", "brain.f.stoch": "Stochastic",
     "brain.f.bbPos": "Bollinger තත්ත්වය", "brain.f.volX": "Volume විශ්වාසය", "brain.f.atr": "වාෂ්පශීලීනාත්වය",
-    "brain.f.structure": "ව්‍යුහය (HH/HL)", "brain.f.candle": "Candle ශක්තිය", "brain.f.btcCtx": "BTC ඇදීම", "brain.f.cndlBull": "📚 Bullish candlestick", "brain.f.cndlBear": "📚 Bearish candlestick", "brain.f.chartBull": "📚 Bullish chart pattern", "brain.f.chartBear": "📚 Bearish chart pattern", "brain.books2": "Book patterns",
+    "brain.f.structure": "ව්‍යුහය (HH/HL)", "brain.f.candle": "Candle ශක්තිය", "brain.f.btcCtx": "BTC ඇදීම", "brain.f.cndlBull": "📚 Bullish candlestick", "brain.f.cndlBear": "📚 Bearish candlestick", "brain.f.chartBull": "📚 Bullish chart pattern", "brain.f.chartBear": "📚 Bearish chart pattern", "brain.f.mtfAlign": "⏱ විශාල කාල රාමු ප්‍රවණතාව", "brain.f.trendStr": "💪 ප්‍රවණතා ගුණාත්මකභාවය", "brain.books2": "Book patterns",
     "mp.target": "🎯 දෛනික ඉලක්කය ලැබුණා — bot එක අදට විවේකයි", "mp.dca": "Auto-DCA · average අඩු කරනවා",
     "mp.volskip": "Crash guard — entry එක skip කළා", "mp.brake": "හදිසි පිටවීම (max hold)",
     "bot.entry": "Entry ශක්තිය (score 5–40; අඩු නම් trades වැඩියි)", "bot.dayT": "දෛනික profit ඉලක්කය USDT (0 = නෑ)", "bot.maxHold": "උපරිම hold දින (0 = නෑ)", "bot.maxLoss": "Brake loss %",
@@ -233,7 +233,7 @@ const STR = {
     "bot.strat.all": "🧠✦ ඔක්කොම එකතුව (උපාය 5ක් එකට)",
     "bot.strat.brain": "🧠 AI Brain (ඉගෙන ගන්නා)",
     "bot.desc.all": "උපාය 5ම එකට vote කරනවා — AI Brain (වැඩිම බර, එයා ඉගෙන ගන්නවා), AI සංඥාව, ප්‍රවණතාව, Mean reversion, Breakout. Weighted consensus එක එකඟ වුණාම විතරයි ඇතුල් වෙන්නේ — trades අඩුයි, විශ්වාසය වැඩියි.",
-    "bot.desc.brain": "හැම tick එකකම market factors 12ක් analyze කරලා trade කරනවා. හැම closed trade එකකින්ම (දිනුම/පැරදුම) ඉගෙන ගන්නවා — history training වලිනුත්. Weights එක දිගටම යාවත්කාලීන වෙනවා.",
+    "bot.desc.brain": "හැම tick එකකම market factors 18ක් analyze කරලා trade කරනවා. හැම closed trade එකකින්ම (දිනුම/පැරදුම) ඉගෙන ගන්නවා — history training වලිනුත්. Weights එක දිගටම යාවත්කාලීන වෙනවා.",
     "bot.strat.signal": "AI සංඥාව (ප්‍රවණතාව + oscillators)",
     "bot.strat.trend": "ප්‍රවණතාව අනුගමනය (EMA cross + MACD)",
     "bot.strat.revert": "මිල ආපසු හැරවීම (RSI අන්ත)",
@@ -2016,7 +2016,22 @@ async function botEvalSymbol(sym, cfg) {
   let brainF = null, brainTh = Math.max(0.05, Math.min(0.4, (Number(cfg.entryScore) || 20) / 100));
   let bias, allRes = null;
   if ((cfg.strategy === "brain" || cfg.strategy === "all") && Brain) {
-    brainF = Brain.features(klines, { btcChg: sym !== "BTCUSDT" && state.tickers["BTCUSDT"] ? state.tickers["BTCUSDT"].chg : 0 });
+    /* v46: higher-timeframe trend context (1h/4h) — cached 5 min */
+    let mtfBias = 0;
+    try {
+      const htf = cfg.tf === "1h" ? "4h" : cfg.tf === "4h" ? "1d" : "1h";
+      const hk = "MTF|" + sym + "|" + htf;
+      let hc = state.klinesCache[hk];
+      if (!hc || now() - hc.at > 300000) {
+        const h = await fetchKlinesSmart(sym, htf, 150);
+        if (h && h.length >= 60) { state.klinesCache[hk] = { at: now(), candles: h }; hc = state.klinesCache[hk]; }
+      }
+      if (hc && hc.candles) {
+        const c = hc.candles.map((x) => x.c), mean = c.reduce((a, x) => a + x, 0) / c.length;
+        mtfBias = Math.max(-1, Math.min(1, (c[c.length - 1] / mean - 1) / 0.03));
+      }
+    } catch (e) {}
+    brainF = Brain.features(klines, { btcChg: sym !== "BTCUSDT" && state.tickers["BTCUSDT"] ? state.tickers["BTCUSDT"].chg : 0, mtfBias });
     const d = Brain.decide(brainF, brainTh);
     b._brainScore = d.score;
     if (cfg.strategy === "all") {
@@ -2109,6 +2124,13 @@ async function botEvalSymbol(sym, cfg) {
     return;
   }
 
+  /* v46: conviction sizing — strong signal + proven accuracy = full size; marginal = half */
+  let sizeUse = cfg.size;
+  if ((cfg.strategy === "brain" || cfg.strategy === "all") && Brain && b._brainScore != null) {
+    const conf = Brain.confidence(b._brainScore, brainTh);
+    sizeUse = Math.max(5, Math.round(cfg.size * conf * 100) / 100);
+    if (conf < 0.95) logLine("🧠 conviction " + Math.round(conf * 100) + "% → size " + sizeUse + " USDT", "");
+  }
   /* v41: 🎯 this trade own sell rate (ATR + trend + conviction) */
   let tpUse = cfg.tp, slUse = cfg.sl, aiRate = false;
   if (cfg.aiTp !== false && (cfg.strategy === "brain" || cfg.strategy === "all")) {
@@ -2117,7 +2139,7 @@ async function botEvalSymbol(sym, cfg) {
   }
   if (state.settings.liveMode === "live" && canTradeLive()) {
     if (bias < 0) { logLine("spot live mode is long-only — short skipped", "warn"); return; }
-    const qty = cfg.size / price;
+    const qty = sizeUse / price;
     const res = await livePlaceOrder(sym, "BUY", qty, price, "MARKET");
     const f = await qtyFilter(sym);
     const q = roundQty(qty, f);
@@ -2129,7 +2151,7 @@ async function botEvalSymbol(sym, cfg) {
   }
 
   const dir = bias > 0 ? 1 : -1;
-  const r = openPaper(sym, price, cfg.size, tpUse, slUse, "bot", dir);
+  const r = openPaper(sym, price, sizeUse, tpUse, slUse, "bot", dir);
   if (r.error) { logLine(sym + ": " + (r.error === "insufficient" ? t("trade.insufficient") : r.error), "bad"); return; }
   if (brainF && r.pos) { r.pos.brain = brainF; if (b._brainScore != null) r.pos.brainScore = b._brainScore; save(); }   /* remember WHY we entered → learn on close */
   if (aiRate && r.pos) { r.pos.aiTpPct = tpUse; r.pos.aiTp0 = tpUse; save(); }

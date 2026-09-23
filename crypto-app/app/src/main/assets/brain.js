@@ -40,6 +40,8 @@
     ["cndlBear",  "Huntraders: bearish candlestick pattern"],
     ["chartBull", "Huntraders: bullish chart pattern"],
     ["chartBear", "Huntraders: bearish chart pattern"],
+    ["mtfAlign",  "Higher-timeframe trend alignment (v46)"],
+    ["trendStr",  "Trend strength: EMA gap vs volatility (v46)"],
   ];
 
   /* seeded priors — trend-following bias, refined by training */
@@ -49,6 +51,8 @@
     candle: 0.3, btcCtx: 0.7,
     /* 📚 book priors: "Chart patterns give the most reliable trading signals" */
     cndlBull: 0.8, cndlBear: 0.8, chartBull: 1.0, chartBear: 1.0,
+    /* v46: trade WITH the higher timeframe; trend quality matters */
+    mtfAlign: 0.9, trendStr: 0.4,
   };
 
   const LSKEY = "cryptoai.brain.v1";
@@ -78,6 +82,7 @@
   }, load() || {});
   S.streak = typeof S.streak === "number" ? S.streak : 0;   /* v45: win/loss streak */
   S.pnlSum = typeof S.pnlSum === "number" ? S.pnlSum : 0;   /* v45: total USDT from brain trades */
+  if (!S.acc || typeof S.acc !== "object") S.acc = {};     /* v46: per-feature reliability ∈ [-1,1] */
   if (!S.w || typeof S.w !== "object") S.w = Object.assign({}, SEED);
   FEATURES.forEach(([id]) => { if (typeof S.w[id] !== "number") S.w[id] = SEED[id] || 0; });
 
@@ -182,6 +187,14 @@
       cs += ((klines[i].c - klines[i].o) / rng);
     }
     f.candle    = Math.max(-1, Math.min(1, cs / 1.5));
+    /* v46: trend QUALITY — EMA gap measured in ATRs (huge gap + low vol = real trend) */
+    if (e20 != null && e50 != null && a != null && px) {
+      const gap = Math.abs(e20 - e50) / px * 100;
+      const ratio = gap / Math.max(a, 0.15);
+      f.trendStr = Math.max(-1, Math.min(1, (e20 >= e50 ? 1 : -1) * ratio / 3));
+    } else f.trendStr = 0;
+    /* v46: higher-timeframe alignment passed in ctx (0 = unknown/neutral) */
+    f.mtfAlign = ctx && typeof ctx.mtfBias === "number" ? Math.max(-1, Math.min(1, ctx.mtfBias)) : 0;
     const bc = ctx && ctx.btcChg != null ? Number(ctx.btcChg) : 0;
     f.btcCtx    = Math.max(-1, Math.min(1, bc / 4));                    /* ±4% BTC day = strong context */
 
@@ -202,7 +215,12 @@
   function decide(f, th) {
     if (!f) return { bias: 0, score: 0 };
     let num = 0, den = 0;
-    FEATURES.forEach(([id]) => { num += (S.w[id] || 0) * (f[id] || 0); den += Math.abs(S.w[id] || 0); });
+    /* v46: each feature's weight scales by its own track record (0.5x..1.5x) —
+       features that keep being wrong fade out until they prove themselves again */
+    FEATURES.forEach(([id]) => {
+      const eff = (S.w[id] || 0) * (1 + 0.5 * (S.acc[id] || 0));
+      num += eff * (f[id] || 0); den += Math.abs(eff);
+    });
     const score = den > 0 ? num / den : 0;
     let t = th != null ? th : 0.2;
     /* v45: discipline — after 2+ straight losses demand a stronger signal;
@@ -210,6 +228,15 @@
     if (S.streak <= -2) t = Math.min(0.4, t + 0.04);
     else if (S.streak >= 3) t = Math.max(0.05, t - 0.02);
     return { score, t, bias: score >= t ? 1 : score <= -t ? -1 : 0 };
+  }
+
+  /* v46: conviction 0.4..1 — how much of the planned size this signal deserves.
+     Strong score + proven live accuracy → full size; marginal signal → half. */
+  function confidence(score, th) {
+    const total = S.wins + S.losses;
+    const acc = total >= 10 ? S.wins / total : 0.55;
+    const strength = Math.min(1, Math.abs(score || 0) / Math.max(th || 0.2, 0.05) / 1.5);
+    return Math.max(0.4, Math.min(1, 0.5 + 0.3 * strength + 0.2 * (acc - 0.5)));
   }
 
   /* ------------------------------------------------------------- learning -- */
@@ -220,7 +247,12 @@
     const w = weight != null ? Math.max(0.3, Math.min(2.5, weight)) : 1;
     FEATURES.forEach(([id]) => {
       const x = f[id] || 0;
-      if (x !== 0) S.w[id] = Math.max(-WCLAMP, Math.min(WCLAMP, (S.w[id] || 0) + LR * w * outcome * x));
+      if (x !== 0) {
+        S.w[id] = Math.max(-WCLAMP, Math.min(WCLAMP, (S.w[id] || 0) + LR * w * outcome * x));
+        /* v46: did THIS feature point the right way? rolling reliability memory */
+        const voted = x * (S.w[id] || 1) >= 0 ? outcome : -outcome;   /* contribution direction vs result */
+        S.acc[id] = Math.max(-1, Math.min(1, (S.acc[id] || 0) * 0.95 + 0.05 * voted));
+      }
     });
     S.n++;
     if (outcome > 0) { S.wins++; S.streak = S.streak >= 0 ? S.streak + 1 : 1; }
@@ -267,17 +299,18 @@
       n: S.n, wins: S.wins, losses: S.losses,
       winRate: total ? S.wins / total : null,
       streak: S.streak || 0,
+      acc: Object.assign({}, S.acc),                /* v46: reliability map */
       avgPnl: total ? S.pnlSum / total : null,      /* v45: avg USDT per brain trade */
       hs: S.hs, trainedAt: S.trainedAt, w: snapshot().w,
     };
   }
   function reset() {
-    S.w = Object.assign({}, SEED); S.n = 0; S.wins = 0; S.losses = 0; S.hs = 0; S.hCorrect = 0; S.trainedAt = 0; S.streak = 0; S.pnlSum = 0;
+    S.w = Object.assign({}, SEED); S.n = 0; S.wins = 0; S.losses = 0; S.hs = 0; S.hCorrect = 0; S.trainedAt = 0; S.streak = 0; S.pnlSum = 0; S.acc = {};
     persist();
   }
 
   return {
-    FEATURES, features, decide, learn, trainHistory, stats, reset,
+    FEATURES, features, decide, learn, trainHistory, stats, reset, confidence,
     patterns: () => Patterns,
     _state: S,
   };

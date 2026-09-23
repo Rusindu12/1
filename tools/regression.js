@@ -38,7 +38,7 @@ function t(name, cond){ console.log((cond?"✅":"❌")+" "+name); if(!cond) fail
 
 t("Brain exported", !!Brain);
 t("Patterns catalog 32", Brain && Brain.patterns() && Brain.patterns().CATALOG.length === 32);
-t("16 features", Brain && Brain.FEATURES.length === 16);
+t("18 features (v46)", Brain && Brain.FEATURES.length === 18);
 t("allDecide exported", typeof SBA.allDecide === "function");
 t("bot exports", typeof SBA.botTick === "function" && typeof SBA.botStart === "function");
 
@@ -168,8 +168,8 @@ t("v44: 🔒 badge in UI", code["app.js"].includes("🔒"));
 
 // ===== v45: smarter brain =====
 Brain.reset();
-const fS = { trendEma: 1.7 };                        /* score = 1.0*1.7/10.3 ≈ 0.165 (seed weights) */
-t("v45: baseline entry above 0.15", Brain.decide(fS, 0.15).bias === 1 && Math.abs(Brain.decide(fS,0.15).score - 0.165) < 0.01);
+const fS = { trendEma: 1.8 };                        /* score = 1.8/11.6 ≈ 0.155 (seed incl. v46 features) */
+t("v45: baseline entry above 0.15", Brain.decide(fS, 0.15).bias === 1 && Math.abs(Brain.decide(fS,0.15).score - 0.155) < 0.01);
 Brain.learn(fS, -1, 1); Brain.learn(fS, -1, 1);      /* two losses in a row */
 t("v45: streak = -2 after 2 losses", Brain.stats().streak === -2);
 t("v45: discipline → same signal now below stricter bar", Brain.decide(fS, 0.15).bias === 0 && Brain.decide(fS, 0.15).t >= 0.19);
@@ -193,6 +193,33 @@ t("v45: weighted close lesson wired", code["app.js"].includes("Brain.learn(pos.b
 t("v45: brainScore stored at entry", code["app.js"].includes("r.pos.brainScore = b._brainScore"));
 t("v45: auto-train at bot start", code["app.js"].includes("auto history training"));
 t("v45: chip shows win rate", code["app.js"].includes('Math.round(st.winRate * 100)'));
+Brain.reset();
+
+// ===== v46: Ultra Brain =====
+t("v46: confidence exported", typeof Brain.confidence === "function");
+const cLow = Brain.confidence(0.16, 0.15), cHigh = Brain.confidence(0.45, 0.15);
+t("v46: confidence bounds + monotonic", cLow >= 0.4 && cLow <= 1 && cHigh > cLow);
+const kU6 = buildTrend(70, 1.005);
+const f6 = Brain.features(kU6, { mtfBias: 0.9 });
+t("v46: mtfAlign passes ctx through", f6.mtfAlign === 0.9);
+t("v46: mtfAlign neutral without ctx", Brain.features(kU6, null).mtfAlign === 0);
+const f6b = Brain.features(kU6, null);
+t("v46: trendStr positive in uptrend", f6b.trendStr > 0);
+const kD6 = buildTrend(70, 0.995);
+t("v46: trendStr negative in downtrend", Brain.features(kD6, null).trendStr < 0);
+// reliability memory: a feature that keeps voting wrong fades out
+Brain.reset();
+const fBad = { rsi: 1.5 };
+for (let i = 0; i < 8; i++) Brain.learn(fBad, -1, 1);      /* rsi keeps pointing long, market shorts */
+t("v46: wrong-feature reliability < 0", (Brain.stats().acc.rsi || 0) < 0);
+const st46 = Brain.stats();
+t("v46: stats expose acc map", st46.acc && typeof st46.acc.rsi === "number");
+// decide still sane with acc active
+t("v46: decide works with reliability scaling", typeof Brain.decide(fBad, 0.15).score === "number");
+// app wiring
+t("v46: MTF fetch wired", code["app.js"].includes("MTF|"));
+t("v46: conviction sizing wired", code["app.js"].includes("Brain.confidence(b._brainScore") && code["app.js"].includes("sizeUse"));
+t("v46: i18n labels", code["app.js"].includes("brain.f.mtfAlign"));
 Brain.reset();
 
 console.log(fails ? "\n"+fails+" FAILURES" : "\n🎉 ALL REGRESSION TESTS PASS");

@@ -29,7 +29,7 @@ web/                      # මේ තමයි ඒ terminal එකම web versi
 | 🖥️ **System** | **Real-time මෙහෙයුම් එන්ජිම** — Process / Memory / Device / File / Security / Network management |
 
 - **Account/keys ඕන නෑ** — prices, signals, charts, paper trading ඔක්කොම free.
-- 🧠 **Self-learning AI brain (v37+)** — 16 factors (indicators 12 + 📚 Huntraders pattern knowledge 4) online-learn කරනවා: හැම trade close එකකදීම outcome එකෙන් weights adapt වෙනවා, trade history trainer එකෙන් bulk-train කරන්නත් පුළුවන්.
+- 🧠 **Ultra Brain (v46)** — 18 factors: indicators 12 + 📚 Huntraders patterns 4 + ⏱ higher-timeframe trend + 💪 trend quality (EMA gap/ATR). **Per-feature reliability memory** — දිගටම වැරදි signal දෙන feature එකක බලය AI එක තනියම අඩු කරගන්නවා. **Conviction sizing** — signal එක ශක්තිමත් + accuracy වැඩි නම් full size, දුර්වල නම් අඩයි.
 - 🛡️ **Never-loss guarantee (v44)** — bot trades කවදාවත් loss එකක sell නෑ: SL/flip වලින් වුණත්, ඕනම exit mode එකක. කලින් profit එකක් පෙන්නුව පස්සේ profit එක fade වුණොත් **🔒 profit lock** එකෙන් floor එකේදීම bank කරනවා.
 - 🎯 **AI sell rate (v41)** — හැම trade එකකටම AI එක තමන්ගේම target එකක් තියනවා: ATR volatility + EMA trend spread + brain conviction වලින් compute වෙනවා, පස්සේ market එක අනුව හැම tick එකකම re-tune වෙනවා (trend strong → target දුරට, reversal/fade → කුඩා ලාභයකදීම exit). කවදාවත් loss එකක sell නෑ — floor එක fees + min profit.
 - 📚 **Huntraders book knowledge (v38)** — huntraders.com/books වල public pattern definitions (candlestick 24 + chart patterns 8, book reliability ratings High/Moderate/Low සමඟ) detection engine එකක් විදිහට encode කරලා brain එකට feed කරනවා. Book ratings = starting priors විතරයි — live outcomes මොනවා actually pay කරන්නේද කියලා brain එක තමන්ම ඉගෙන ගන්නවා.
