@@ -252,5 +252,16 @@ const tSave = process.hrtime.bigint();
 SBA.saveSoon(); SBA.saveSoon();
 t("v48: saveSoon coalesces (single timer)", code["app.js"].includes("if (saveSoon._t) return;"));
 
+// ===== v49: web 24/7 =====
+t("v49: wdStart/wdStop/wdWake exported", typeof SBA.wdStart === "function" && typeof SBA.wdStop === "function" && typeof SBA.wdWake === "function");
+t("v49: Worker guarded (no crash in vm)", code["app.js"].includes('typeof Worker === "undefined"'));
+t("v49: worker heartbeat on start (web)", code["app.js"].includes("if (!hasBridge()) {\n    wdStart(); wdWake(true);"));
+t("v49: watchdog keeps worker alive", code["app.js"].includes("b.watchdog = true;\n    wdStart()"));
+t("v49: full stop releases keep-alives", code["app.js"].includes("wdStop(); wdWake(false);"));
+t("v49: worker dispatches tick correctly", code["app.js"].includes("if (b.running) botTick();\n        else if (b.watchdog) botWatchdog();"));
+t("v49: web system notifications", code["app.js"].includes("Notification.permission === \"granted\""));
+t("v49: wake lock re-acquire on visible", code["app.js"].includes("visibilitychange"));
+t("v49: worker.js exists (assets + web)", fs.existsSync(path.join(A, "worker.js")) && fs.existsSync(path.join(A, "..", "..", "..", "..", "..", "web", "app", "worker.js")));
+
 console.log(fails ? "\n"+fails+" FAILURES" : "\n🎉 ALL REGRESSION TESTS PASS");
 process.exit(fails?1:0);

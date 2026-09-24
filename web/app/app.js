@@ -750,6 +750,12 @@ function toast(msg, cls, ms) {
 function notify(title, text, kind) {
   toast(title + " — " + text, kind === "bad" ? "bad" : kind === "ok" ? "ok" : "");
   bc("notifySignal", title, text);
+  /* v49: web fallback — real system notification when the browser allows them */
+  try {
+    if (!hasBridge() && typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden) {
+      new Notification(title, { body: text });
+    }
+  } catch (e) {}
   haptic(60);
   beep(kind === "bad" ? 520 : 940);
   if (state.settings.tts) bc("speak", title + ". " + text);
@@ -2230,6 +2236,36 @@ function onPrice(sym, price) {
   if (state.bot && state.bot.running) botOnTick(sym, price);
 }
 
+/* ---- v49: web 24/7 — worker heartbeat + screen wake lock (browser mode) ---- */
+function wdStart() {
+  if (typeof Worker === "undefined") return;         /* vm / very old browser */
+  try {
+    if (!state.wdWorker) {
+      state.wdWorker = new Worker("worker.js");
+      state.wdWorker.onmessage = () => {
+        const b = bot();
+        if (b.running) botTick();
+        else if (b.watchdog) botWatchdog();
+      };
+    }
+    state.wdWorker.postMessage("start");
+  } catch (e) {}
+}
+function wdStop() {
+  try { if (state.wdWorker) { state.wdWorker.postMessage("stop"); } } catch (e) {}
+}
+function wdWake(on) {
+  if (hasBridge() || typeof navigator === "undefined" || !navigator.wakeLock) return;
+  try {
+    if (on && !state.wdLock) navigator.wakeLock.request("screen").then((l) => { state.wdLock = l; }).catch(() => {});
+    else if (!on && state.wdLock) { state.wdLock.release().catch(() => {}); state.wdLock = null; }
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => {
+  /* re-acquire the wake lock when the tab becomes visible again (browsers auto-release) */
+  if (document.visibilityState === "visible" && state.bot && state.bot.running) wdWake(true);
+});
+
 function botStart() {
   const cfg = botCfg(), b = bot();
   if (!cfg.symbols.length) { toast(t("bot.noSymbol"), "bad"); return; }
@@ -2243,6 +2279,11 @@ function botStart() {
   bc("startBgService", "CryptoAI bot · " + cfg.symbols.length + " pairs · " + cfg.strategy);
   if (b.loop) clearInterval(b.loop);
   b.loop = setInterval(botTick, 2000);   /* v40: scan every 2s */
+  if (!hasBridge()) {
+    wdStart(); wdWake(true);
+    try { if (typeof Notification !== "undefined" && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+    logLine("🌐 web 24/7: worker heartbeat + wake lock ON — tab එක open තියෙනවා නම් bot එක නවතින්නේ නෑ", "");
+  }
   logLine("── bot started · " + cfg.strategy + " · " + cfg.tf + " · ⏱2s scan · " + cfg.symbols.join(", ") + " ──", "ok");
   /* v45: auto history training — the brain starts every session with backtested
      experience instead of waiting for live trades to teach it */
@@ -2282,6 +2323,7 @@ function botStop() {
   bc("setAutoOn", false);          /* explicit stop → no auto-resume after relaunch/reboot */
   if (openN > 0) {
     b.watchdog = true;
+    wdStart();                           /* v49: worker keeps watchdog ticking in background tabs too */
     if (b.wdLoop) clearInterval(b.wdLoop);
     b.wdLoop = setInterval(botWatchdog, 3000);
     bc("startBgService", "⏱ watchdog · " + openN + " pos — selling at profit only");
@@ -2291,6 +2333,7 @@ function botStop() {
   } else {
     bc("stopBgService");
     bc("setTradingActive", false);
+    wdStop(); wdWake(false);             /* v49: nothing to guard → release web keep-alives */
     notify(t("bot.stopped"), "", "bad");
   }
   bc("setKeepScreenOn", !!(state.settings.keep));
@@ -2308,6 +2351,7 @@ function botWatchdog() {
     b.watchdog = false;
     bc("stopBgService");
     bc("setTradingActive", false);
+    wdStop(); wdWake(false);             /* v49 */
     logLine("⏱ watchdog done — all positions closed in profit, engine fully stopped", "ok");
     paintBot(); paint247();
     return;

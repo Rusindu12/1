@@ -54,6 +54,13 @@ Install guide (සිංහල): [crypto-app/INSTALL_SI.md](crypto-app/INSTALL_S
 cd web && python3 -m http.server 8080   # → http://localhost:8080 (paper mode)
 ```
 
+### 🌐 Web 24/7 (v49)
+
+Bot START කළාම web version එකේම **Worker heartbeat + Wake Lock + system notifications** auto-ON:
+tab background වුණත් bot එක 2s cadence එකේම run වෙනවා (page timers throttle වෙන්නේ නැති Worker එකෙන්),
+screen lock වෙන්නේ නෑ, trade වෙද්දී browser notification එනවා. Best result: PWA එක install කරලා standalone window එකේ run කරන්න.
+(Android app එකේ foreground service 24/7 layer එකම තියෙනවා — ඒක වඩා strong.)
+
 `ta.js` engine එක dependency-free — Node වලෙනුත් run කරන්න පුළුවන් (backtester test එකත් එනවා):
 
 ```bash
