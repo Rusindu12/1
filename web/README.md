@@ -60,3 +60,5 @@ the browser build is paper mode.
 ```bash
 python3 web/tools/make_icons.py   # needs no third-party packages
 ```
+
+**Live:** https://rusindu12.github.io/1/  ·  app: https://rusindu12.github.io/1/app/
