@@ -345,6 +345,10 @@ function save() {
     localStorage.setItem(LSKEY, JSON.stringify(s));
   } catch (e) { /* storage full / private mode */ }
 }
+function saveSoon() {              /* v48: debounced save — no sync localStorage writes every tick */
+  if (saveSoon._t) return;
+  saveSoon._t = setTimeout(() => { saveSoon._t = null; save(); }, 2000);
+}
 function load() {
   try {
     const raw = localStorage.getItem(LSKEY);
@@ -1380,6 +1384,7 @@ function openPaper(sym, price, usdtAmount, tpPct, slPct, src, dir) {
   };
   p.positions.push(pos);
   p.history.unshift({ ts: now(), sym, side: dir > 0 ? "BUY" : "SHORT", qty, price, src: pos.src, pnl: null });
+  if (p.history.length > 300) p.history.length = 300;   /* v48: bound storage */
   save();
   return { ok: true, pos };
 }
@@ -1397,6 +1402,7 @@ function closePaper(posId, price, reason) {
   p.eq.push({ t: now(), v: paperEquity() });
   if (p.eq.length > 300) p.eq.shift();
   p.history.unshift({ ts: now(), sym: pos.sym, side: pos.dir > 0 ? "SELL" : "BUY-BACK", qty: pos.qty, price, src: pos.src, pnl, reason });
+  if (p.history.length > 300) p.history.length = 300;   /* v48: bound storage */
   const bot = state.bot;
   if (bot && pos.src === "bot") {
     bot.stats.trades++;
@@ -1896,7 +1902,7 @@ function aiTarget(rep, klines, brainScore, brainTh) {
 }
 
 /* move the sell rate of open AI trades as the market changes (2s cadence) */
-function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
+function aiAdjustPos(sym, cfg, klines, rep, b, brainTh, patPre) {
   if (cfg.aiTp === false) return;
   const px = klines[klines.length - 1].c, m = rep.metrics;
   const mine = paper().positions.filter((x) => x.sym === sym);   /* v43: bot + DCA + manual trades all get the AI rate */
@@ -1920,10 +1926,9 @@ function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
   /* reversal pattern against the held direction? */
   let revName = null;
   try {
-    const Pat = (typeof Patterns !== "undefined") ? Patterns : (Brain && Brain.patterns ? Brain.patterns() : null);
-    if (Pat) {
-      const d = Pat.detect(klines);
-      const rv = d.hit.find((x) => x.v >= 0.35 && x.side === -all[0].dir);
+    if (!patPre) patPre = (typeof Patterns !== "undefined") ? Patterns.detect(klines) : null;   /* v48: reuse botEvalSymbol's detection */
+    if (patPre) {
+      const rv = patPre.hit.find((x) => x.v >= 0.35 && x.side === -all[0].dir);
       if (rv) revName = rv.name;
     }
   } catch (e) {}
@@ -1963,14 +1968,17 @@ function aiAdjustPos(sym, cfg, klines, rep, b, brainTh) {
       logLine("🎯 AI sell rate " + sym + ": " + oldP.toFixed(2) + "% → " + np2.toFixed(2) + "% · " + tag, "ai");
     }
   }
-  if (changed) save();
+  if (changed) saveSoon();   /* v48: debounced */
 }
 
 async function botTick() {
   const b = bot(), cfg = botCfg();
   if (!b.running) return;
-  if (b._busy) return;              /* previous tick still fetching — skip, don't stack */
-  b._busy = true;
+  if (b._busy) {                    /* previous tick still fetching — skip, don't stack */
+    if (now() - (b._busyAt || 0) > 30000) b._busy = false;   /* v48: hung fetch → auto-recover */
+    else return;
+  }
+  b._busy = true; b._busyAt = now();
   try { await botTickInner(b, cfg); } finally { b._busy = false; }
 }
 async function botTickInner(b, cfg) {
@@ -1991,7 +1999,8 @@ async function botTickInner(b, cfg) {
   for (const sym of cfg.symbols) {
     try { await botEvalSymbol(sym, cfg); } catch (e) { logLine(sym + ": " + (e.message || e), "bad"); }
   }
-  paintBotStats(); if (state.tab === "trade") paintTrade();
+  /* v48: repaint at most every 10s — trade ticks already paint positions live */
+  if (now() - (b._paintAt || 0) > 10000) { b._paintAt = now(); paintBotStats(); if (state.tab === "trade") paintTrade(); }
   /* 24/7 — keep the foreground-service notification fresh (throttled to 10s) */
   try {
     if (now() - (b._lastStatus || 0) > 10000) {
@@ -2010,28 +2019,41 @@ async function botEvalSymbol(sym, cfg) {
   if (cache && now() - cache.at < 5000) klines = cache.candles;   /* v40: fresh candles for 2s cadence */
   else klines = await fetchKlinesSmart(sym, cfg.tf, 300);
   if (!klines || klines.length < 60) return;
-  const rep = TA.analyze(klines);
+  /* v48: reuse the TA analysis while candles are fresh — the 2s tick no longer re-analyzes */
+  const repC = state.repCache = state.repCache || {};
+  const rk = "rep|" + key;
+  let rep;
+  if (cache && cache.candles === klines && repC[rk]) rep = repC[rk];
+  else { rep = TA.analyze(klines); repC[rk] = rep; }
   if (!rep.ok) return;
   b.stats.signals++;
   let brainF = null, brainTh = Math.max(0.05, Math.min(0.4, (Number(cfg.entryScore) || 20) / 100));
   let bias, allRes = null;
   if ((cfg.strategy === "brain" || cfg.strategy === "all") && Brain) {
-    /* v46: higher-timeframe trend context (1h/4h) — cached 5 min */
-    let mtfBias = 0;
-    try {
-      const htf = cfg.tf === "1h" ? "4h" : cfg.tf === "4h" ? "1d" : "1h";
-      const hk = "MTF|" + sym + "|" + htf;
-      let hc = state.klinesCache[hk];
-      if (!hc || now() - hc.at > 300000) {
-        const h = await fetchKlinesSmart(sym, htf, 150);
-        if (h && h.length >= 60) { state.klinesCache[hk] = { at: now(), candles: h }; hc = state.klinesCache[hk]; }
-      }
-      if (hc && hc.candles) {
-        const c = hc.candles.map((x) => x.c), mean = c.reduce((a, x) => a + x, 0) / c.length;
-        mtfBias = Math.max(-1, Math.min(1, (c[c.length - 1] / mean - 1) / 0.03));
-      }
-    } catch (e) {}
-    brainF = Brain.features(klines, { btcChg: sym !== "BTCUSDT" && state.tickers["BTCUSDT"] ? state.tickers["BTCUSDT"].chg : 0, mtfBias });
+    /* v48: brain features + pattern detection run only on FRESH candles (≤5s old reuse) */
+    if (cache && cache.candles === klines && repC[rk + "|f"]) {
+      brainF = repC[rk + "|f"];
+    } else {
+      /* v46: higher-timeframe trend context (1h/4h) — cached 5 min */
+      let mtfBias = 0;
+      try {
+        const htf = cfg.tf === "1h" ? "4h" : cfg.tf === "4h" ? "1d" : "1h";
+        const hk = "MTF|" + sym + "|" + htf;
+        let hc = state.klinesCache[hk];
+        if (!hc || now() - hc.at > 300000) {
+          const h = await fetchKlinesSmart(sym, htf, 150);
+          if (h && h.length >= 60) { state.klinesCache[hk] = { at: now(), candles: h }; hc = state.klinesCache[hk]; }
+        }
+        if (hc && hc.candles) {
+          const c = hc.candles.map((x) => x.c), mean = c.reduce((a, x) => a + x, 0) / c.length;
+          mtfBias = Math.max(-1, Math.min(1, (c[c.length - 1] / mean - 1) / 0.03));
+        }
+      } catch (e) {}
+      const patNow = (typeof Patterns !== "undefined") ? (() => { try { return Patterns.detect(klines); } catch (e) { return null; } })() : null;
+      repC[rk + "|pat"] = patNow;
+      brainF = Brain.features(klines, { btcChg: sym !== "BTCUSDT" && state.tickers["BTCUSDT"] ? state.tickers["BTCUSDT"].chg : 0, mtfBias, pat: patNow });
+      repC[rk + "|f"] = brainF;
+    }
     const d = Brain.decide(brainF, brainTh);
     b._brainScore = d.score;
     if (cfg.strategy === "all") {
@@ -2061,7 +2083,7 @@ async function botEvalSymbol(sym, cfg) {
   const liveHeld = (b.livePos || []).filter((x) => x.sym === sym);
   /* v42: 🎯 re-tune the sell rate of ALL open bot trades every tick — any strategy, old + new */
   if (cfg.aiTp !== false) {
-    try { aiAdjustPos(sym, cfg, klines, rep, b, brainTh); } catch (e) {}
+    try { aiAdjustPos(sym, cfg, klines, rep, b, brainTh, repC[rk + "|pat"]); } catch (e) {}
   }
   /* 2s cadence: log the verdict only when bias flips or once a minute per symbol */
   b._vLog = b._vLog || {};

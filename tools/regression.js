@@ -236,5 +236,21 @@ t("v47: profit tick sells (onPrice)", !SBA.paper().positions.includes(oW.pos));
 SBA.botWatchdog();                                                 /* nothing open → self-retire */
 t("v47: watchdog self-retires when flat", typeof SBA.botWatchdog === "function");
 
+// ===== v48: performance + stability =====
+t("v48: ctx.pat passthrough (no double detect)", (() => {
+  const f = Brain.features(buildTrend(70,1.002), { pat: { bull: 0.5, bear: 0, chartBull: 0, chartBear: 0, hit: [] } });
+  return f.cndlBull === 0.5 && f.cndlBear === 0;
+})());
+t("v48: busy-hang recovery (30s)", code["app.js"].includes("_busyAt") && code["app.js"].includes("> 30000"));
+t("v48: TA analysis reuse (rep cache)", code["app.js"].includes("state.repCache") && code["app.js"].includes("repC[rk]"));
+t("v48: brain features cached per fresh candles", code["app.js"].includes('repC[rk + "|f"]'));
+t("v48: single pattern detect per tick", code["app.js"].includes("pat: patNow") && code["app.js"].includes("patPre"));
+t("v48: saveSoon debounce", typeof SBA.saveSoon === "function" && code["app.js"].includes("saveSoon();   /* v48: debounced */"));
+t("v48: paint throttle 10s", code["app.js"].includes("_paintAt"));
+t("v48: history capped at 300", code["app.js"].includes("p.history.length > 300"));
+const tSave = process.hrtime.bigint();
+SBA.saveSoon(); SBA.saveSoon();
+t("v48: saveSoon coalesces (single timer)", code["app.js"].includes("if (saveSoon._t) return;"));
+
 console.log(fails ? "\n"+fails+" FAILURES" : "\n🎉 ALL REGRESSION TESTS PASS");
 process.exit(fails?1:0);

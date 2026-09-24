@@ -202,7 +202,7 @@
     f.cndlBull = f.cndlBear = f.chartBull = f.chartBear = 0;
     if (Patterns) {
       try {
-        const p = Patterns.detect(klines);
+        const p = (ctx && ctx.pat) ? ctx.pat : Patterns.detect(klines);   /* v48: reuse caller's detection */
         f.cndlBull = p.bull; f.cndlBear = -p.bear;              /* signed: bearish pushes short */
         f.chartBull = p.chartBull; f.chartBear = -p.chartBear;
       } catch (e) { /* pattern engine hiccup — indicators still stand */ }
