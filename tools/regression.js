@@ -222,5 +222,19 @@ t("v46: conviction sizing wired", code["app.js"].includes("Brain.confidence(b._b
 t("v46: i18n labels", code["app.js"].includes("brain.f.mtfAlign"));
 Brain.reset();
 
+// ===== v47: watchdog — stop never abandons positions =====
+t("v47: botWatchdog exported", typeof SBA.botWatchdog === "function");
+SBA.closePaperAll(null, 100, "test-cleanup");                      /* clear earlier test positions */
+const oW = SBA.openPaper("WDUSDT", 100, 50, 1.5, 0.8, "bot", 1);
+SBA.botStart(); SBA.botStop();                                     /* real start→stop path */
+SBA.publishTicker("WDUSDT", { last: 95, chg: -5 });                /* deep loss */
+t("v47: stopped engine does NOT sell at a loss", SBA.paper().positions.includes(oW.pos));
+SBA.botWatchdog();                                                 /* watchdog tick at loss */
+t("v47: watchdog does NOT sell at a loss", SBA.paper().positions.includes(oW.pos));
+SBA.publishTicker("WDUSDT", { last: 102, chg: 2 });                /* profit */
+t("v47: profit tick sells (onPrice)", !SBA.paper().positions.includes(oW.pos));
+SBA.botWatchdog();                                                 /* nothing open → self-retire */
+t("v47: watchdog self-retires when flat", typeof SBA.botWatchdog === "function");
+
 console.log(fails ? "\n"+fails+" FAILURES" : "\n🎉 ALL REGRESSION TESTS PASS");
 process.exit(fails?1:0);

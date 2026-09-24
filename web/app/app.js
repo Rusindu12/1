@@ -2213,6 +2213,8 @@ function botStart() {
   if (!cfg.symbols.length) { toast(t("bot.noSymbol"), "bad"); return; }
   if (b.running) return;
   b.running = true; b.startedAt = now(); b.dayStartPnl = paper().dayPnl;
+  b.watchdog = false;                              /* v47: fresh start retires the watchdog */
+  if (b.wdLoop) { clearInterval(b.wdLoop); b.wdLoop = null; }
   if (cfg.keep || state.settings.keep) { bc("setKeepScreenOn", true); }
   bc("setAutoOn", true);
   bc("setTradingActive", true);
@@ -2252,13 +2254,50 @@ function botStop() {
   if (!b.running) return;
   b.running = false;
   if (b.loop) { clearInterval(b.loop); b.loop = null; }
+  /* v47: 🛡️ watchdog — open positions are NEVER abandoned: keep the 24/7 engine
+     alive purely to sell them at PROFIT (never at a loss), no new entries */
+  const openN = paper().positions.filter((x) => x.src === "bot" || x.src === "bot-dca").length + (b.livePos || []).length;
   bc("setAutoOn", false);          /* explicit stop → no auto-resume after relaunch/reboot */
-  bc("stopBgService");
-  bc("setTradingActive", false);
+  if (openN > 0) {
+    b.watchdog = true;
+    if (b.wdLoop) clearInterval(b.wdLoop);
+    b.wdLoop = setInterval(botWatchdog, 3000);
+    bc("startBgService", "⏱ watchdog · " + openN + " pos — selling at profit only");
+    bc("setTradingActive", true);
+    logLine("⏱ watchdog: " + openN + " open positions keep waiting for profit (no new entries)", "ai");
+    notify(t("bot.stopped"), "⏱ " + openN + " positions open — watchdog sells at profit", "");
+  } else {
+    bc("stopBgService");
+    bc("setTradingActive", false);
+    notify(t("bot.stopped"), "", "bad");
+  }
   bc("setKeepScreenOn", !!(state.settings.keep));
   logLine("── bot stopped ──", "warn");
-  notify(t("bot.stopped"), "", "bad");
   paintBot(); paintBotStats(); paint247();
+}
+
+/* v47: watchdog tick — profit exits ONLY for open bot/live positions */
+function botWatchdog() {
+  const b = bot();
+  const mine = paper().positions.filter((x) => x.src === "bot" || x.src === "bot-dca");
+  const live = b.livePos || [];
+  if (!mine.length && !live.length) {
+    if (b.wdLoop) { clearInterval(b.wdLoop); b.wdLoop = null; }
+    b.watchdog = false;
+    bc("stopBgService");
+    bc("setTradingActive", false);
+    logLine("⏱ watchdog done — all positions closed in profit, engine fully stopped", "ok");
+    paintBot(); paint247();
+    return;
+  }
+  const syms = new Set(mine.map((x) => x.sym).concat(live.map((x) => x.sym)));
+  syms.forEach((s) => {
+    const tk = state.tickers[s];
+    if (tk && tk.last) {
+      checkPaperPositions(s, tk.last);          /* ≥ min profit only, never loss */
+      if (b.livePos && b.livePos.length) botOnTick(s, tk.last);
+    }
+  });
 }
 
 function paintBotStats() {
