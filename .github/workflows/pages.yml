@@ -8,7 +8,7 @@ name: Deploy website (GitHub Pages)
 # https://<owner>.github.io/<repo>/
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "arena/01a0c384-1"]   # release branch also publishes, so the live site stays in step with the APK
     paths:
       - "web/**"
       - "crypto-app/app/src/main/assets/**"
