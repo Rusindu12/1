@@ -57,3 +57,17 @@ jobs:
           name: aibrain-signed-apk
           path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
+
+      - name: Publish APK to GitHub Releases (Direct Download Link)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          cp android/app/build/outputs/apk/debug/*.apk /tmp/AIBrain.apk
+          gh release view aibrain-apk-latest --repo "${REPO}" >/dev/null 2>&1 || \
+            gh release create aibrain-apk-latest --repo "${REPO}" \
+                --title "AI Brain — Universal Android APK (සිංහල + English)" \
+                --notes "Auto-built signed APK for AI Brain. Features: Floating Bubble, Accessibility Service, Text Selection, Share Target, and Shared Cloud Memory."
+          gh release upload aibrain-apk-latest /tmp/AIBrain.apk --repo "${REPO}" --clobber
+          echo "APK is live at: https://github.com/${REPO}/releases/tag/aibrain-apk-latest"
