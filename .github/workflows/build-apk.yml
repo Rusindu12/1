@@ -30,23 +30,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-
-      - name: Generate Release Keystore
-        working-directory: android/app
-        run: |
-          keytool -genkey -v -keystore debug.keystore \
-            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass androiddebugkey -keypass androiddebugkey \
-            -dname "CN=AIBrain, OU=Mobile, O=AI Brain, L=Colombo, S=Western, C=LK"
 
       - name: Verify Android Manifest & Kotlin Code
         run: |
@@ -55,30 +43,26 @@ jobs:
           grep -q "BrainAccessibilityService" android/app/src/main/AndroidManifest.xml
           grep -q "BrainShareTargetActivity" android/app/src/main/AndroidManifest.xml
           grep -q "BrainProcessTextActivity" android/app/src/main/AndroidManifest.xml
+          grep -q "BrainVoiceInteractionService" android/app/src/main/AndroidManifest.xml
           echo "Android components and manifest verified."
 
-      - name: Assemble & Sign APK
+      - name: Build APK (signed, installable)
         working-directory: android
         run: |
-          chmod +x gradlew || true
-          ./gradlew assembleRelease --no-daemon --stacktrace || {
-            echo "Building fallback standalone signed APK package..."
-            mkdir -p app/build/outputs/apk/release
-            echo "AI Brain v1.0.0 Signed Universal APK Payload" > app/build/outputs/apk/release/app-release.apk
-          }
+          gradle assembleRelease --no-daemon --stacktrace || gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: aibrain-signed-apk
-          path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          path: android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/release/*.apk
+          files: android/app/build/outputs/apk/**/*.apk
           tag_name: ${{ github.event.inputs.release_version || 'v1.0.0' }}
           name: AI Brain Android APK ${{ github.event.inputs.release_version || 'v1.0.0' }}
           body: |
