@@ -49,7 +49,7 @@ jobs:
       - name: Build APK (signed, installable)
         working-directory: android
         run: |
-          gradle assembleRelease --no-daemon --stacktrace || gradle assembleDebug --no-daemon --stacktrace
+          gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -57,21 +57,3 @@ jobs:
           name: aibrain-signed-apk
           path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
-
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: android/app/build/outputs/apk/**/*.apk
-          tag_name: ${{ github.event.inputs.release_version || 'v1.0.0' }}
-          name: AI Brain Android APK ${{ github.event.inputs.release_version || 'v1.0.0' }}
-          body: |
-            ## 🧠 AI Brain Universal Android APK (සිංහල + English)
-            - 🫧 Floating Bubble (SYSTEM_ALERT_WINDOW)
-            - 👁️ Accessibility Service with Consent Indicator
-            - 📝 Global Text Selection Context Action (PROCESS_TEXT)
-            - 📤 Share-Sheet Target (ACTION_SEND)
-            - 🎙️ Bilingual Voice Input/Output (Sinhala & English)
-            - ☁️ Shared Cloud Memory
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

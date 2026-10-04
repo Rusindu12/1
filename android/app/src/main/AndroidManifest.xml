@@ -9,15 +9,15 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:allowBackup="true"
-        android:icon="@android:drawable/ic_dialog_info"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@android:drawable/ic_dialog_info"
+        android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:theme="@style/Theme.AIBrain"
         android:usesCleartextTraffic="true">
 
         <!-- 1. Main Dashboard Activity -->
@@ -41,7 +41,7 @@
             android:name=".BrainShareTargetActivity"
             android:exported="true"
             android:label="@string/share_target_title"
-            android:theme="@style/Theme.AppCompat.Translucent">
+            android:theme="@style/Theme.AIBrain.Dialog">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -54,7 +54,7 @@
             android:name=".BrainProcessTextActivity"
             android:exported="true"
             android:label="@string/action_process_text"
-            android:theme="@style/Theme.AppCompat.Translucent">
+            android:theme="@style/Theme.AIBrain.Dialog">
             <intent-filter>
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -67,11 +67,7 @@
             android:name=".BrainBubbleService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Floating quick assistance bubble over other apps" />
-        </service>
+            android:foregroundServiceType="dataSync" />
 
         <!-- 5. Accessibility Service (Read and act inside other apps with explicit consent) -->
         <service
