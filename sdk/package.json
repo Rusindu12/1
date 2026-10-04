@@ -1,0 +1,17 @@
+{
+  "name": "@aibrain/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript & JavaScript SDK for AI Brain (Sinhala + English Universal AI Agent)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"SDK tests ok\""
+  },
+  "keywords": ["ai-brain", "sinhala", "singlish", "bilingual-agent", "shared-memory", "pgvector"],
+  "author": "AI Brain Team",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

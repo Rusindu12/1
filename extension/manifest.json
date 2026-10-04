@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "AI Brain — Universal Sinhala + English Assistant",
+  "version": "1.0.0",
+  "description": "Universal AI Brain for any webpage. Sinhala, Singlish and English auto-detection backed by Shared Cloud Memory.",
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Brain (සිංහල / English)"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "commands": {
+    "toggle-brain": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Activate AI Brain on current page"
+    }
+  }
+}

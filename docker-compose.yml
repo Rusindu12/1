@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  brain-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aibrain-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://aibrain:aibrain_secure_pass_2026@postgres:5432/aibrain_db
+      - REDIS_URL=redis://redis:6379
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET:-aibrain_master_encryption_key_2026_sinhala_english}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - aibrain-net
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aibrain-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=aibrain
+      - POSTGRES_PASSWORD=aibrain_secure_pass_2026
+      - POSTGRES_DB=aibrain_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./brain-server/src/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aibrain -d aibrain_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aibrain-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: aibrain-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - aibrain-net
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  aibrain-net:
+    driver: bridge

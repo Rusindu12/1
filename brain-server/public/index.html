@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Brain — සිංහල + English Universal AI Agent</title>
+  <!-- Google Fonts: Inter & Noto Sans Sinhala for perfect Sinhala Unicode rendering -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #121826;
+      --card-border: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #818cf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-main: 'Inter', 'Noto Sans Sinhala', 'Iskoola Pota', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: rgba(18, 24, 38, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      color: var(--text);
+    }
+
+    .nav-tab.active {
+      background: #1e293b;
+      color: var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* CHAT VIEW */
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      height: calc(100vh - 140px);
+    }
+
+    .chat-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 0.9rem 1.1rem;
+      border-radius: 12px;
+      line-height: 1.55;
+      font-size: 0.95rem;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #1e293b;
+      border-top-right-radius: 2px;
+      color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--card-border);
+      border-top-left-radius: 2px;
+      color: #f8fafc;
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .memory-tag {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+
+    .chat-input-area {
+      padding: 1rem;
+      background: #0f172a;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .singlish-preview {
+      font-size: 0.8rem;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.08);
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+      display: none;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .chat-input:focus {
+      border-color: var(--primary);
+    }
+
+    .icon-btn {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: #334155;
+      color: var(--text);
+    }
+
+    .icon-btn.recording {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border-color: var(--danger);
+      animation: pulse 1s infinite;
+    }
+
+    .send-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: 600;
+      border: none;
+      padding: 0 1.25rem;
+      height: 42px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s;
+    }
+
+    .send-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    /* SIDEBAR / INFO */
+    .sidebar {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .stat-card {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      padding: 0.75rem;
+      border-radius: 8px;
+    }
+
+    .stat-val {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: var(--font-mono);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* MEMORY VIEW */
+    .memory-toolbar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 250px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      color: var(--text);
+      font-family: var(--font-main);
+    }
+
+    .select-dropdown {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: #334155; }
+    .btn-primary { background: var(--primary); color: #0b0f19; font-weight: 600; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239,68,68,0.3); }
+
+    .memory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .memory-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .memory-card:hover {
+      border-color: #334155;
+    }
+
+    .memory-body {
+      flex: 1;
+    }
+
+    .memory-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-chat { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .badge-facts { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .badge-tasks { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .badge-knowledge { background: rgba(129, 140, 248, 0.15); color: #818cf8; }
+
+    .memory-text {
+      font-size: 0.92rem;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    .memory-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    /* TASKS & CODING */
+    .task-banner {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .code-console {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #a5f3fc;
+      min-height: 220px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      width: 90%;
+      max-width: 520px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">🧠</div>
+      <div class="brand-text">
+        <h1>AI Brain (කෘත්‍රිම බුද්ධි මොළය)</h1>
+        <p>Sinhala + English Universal AI Agent · Shared Cloud Memory</p>
+      </div>
+    </div>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('chat')">💬 සංවාදය (Chat)</button>
+      <button class="nav-tab" onclick="switchTab('memory')">🧠 මතකය (Memory)</button>
+      <button class="nav-tab" onclick="switchTab('tasks')">⚡ කාර්යයන් (Tasks)</button>
+      <button class="nav-tab" onclick="switchTab('coding')">💻 කේතකරණය (Coding)</button>
+      <button class="nav-tab" onclick="switchTab('learning')">🌐 ඉගෙනුම (Learning)</button>
+      <button class="nav-tab" onclick="switchTab('settings')">🔑 ප්‍රවේශය (Access)</button>
+    </nav>
+
+    <div class="header-actions">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="systemStatus">Online · Active</span>
+      </div>
+      <button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="toggleKillSwitch()">
+        🛑 Kill Switch
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. CHAT TAB -->
+    <div id="tab-chat" class="tab-content active">
+      <div class="chat-layout">
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+              <div class="message-meta">
+                <span>🧠 AI Brain</span>
+                <span class="memory-tag">Bilingual Engine</span>
+              </div>
+              <p>ආයුබෝවන්! මම ඔබගේ <strong>AI Brain</strong> බුද්ධිමය සහායකයා. මට සිංහල (Unicode), Singlish (e.g. <em>"kohomada meka karanne"</em>) සහ English භාෂාවලින් එකවර වැඩ කළ හැක. ඔබගේ Android දුරකථනයේ ඕනෑම app එකක සිට (Floating Bubble, Selection, Accessibility) මෙන්ම Web එකෙන්ද මම සහාය දෙමි.</p>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <div id="singlishPreview" class="singlish-preview">
+              <span style="opacity: 0.7;">Singlish → සිංහල:</span> <strong id="singlishConvertedText"></strong>
+            </div>
+            <div class="input-row">
+              <input type="text" id="chatInput" class="chat-input" placeholder="Type in Sinhala, Singlish (e.g. 'kohomada'), or English..." oninput="handleInputTyping()" onkeydown="handleKeyDown(event)">
+              <button class="icon-btn" id="voiceBtn" title="Voice Input (Sinhala / English STT)" onclick="toggleVoiceInput()">🎙️</button>
+              <button class="icon-btn" id="ttsBtn" title="Voice Output (TTS)" onclick="toggleTTS()">🔊</button>
+              <button class="send-btn" onclick="sendMessage()">යවන්න ➔</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar">
+          <div>
+            <div class="card-title">
+              <span>මතක තොරතුරු (Memory Stats)</span>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-val" id="statTotalMemories">0</div>
+                <div class="stat-label">Total Entries</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-val" id="statFactsCount">0</div>
+                <div class="stat-label">Long-Term Facts</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-val" id="statKnowledgeCount">0</div>
+                <div class="stat-label">Learned Knowledge</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-val" id="statTasksCount">0</div>
+                <div class="stat-label">Tasks Completed</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-title">
+              <span>සම්බන්ධිත උපාංග (Universal Access)</span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
+              <p>📱 <strong>Android APK:</strong> Bubble, Share, Selection, Accessibility</p>
+              <p>🌐 <strong>Web App & Extensions:</strong> Chrome & Firefox V3</p>
+              <p>🔑 <strong>API SDK:</strong> REST API + Shared Account Key</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-title">
+              <span>භාෂා පරීක්ෂාව (Language Detector)</span>
+            </div>
+            <div id="detectedLanguageBadge" style="font-size: 0.8rem; background: #0f172a; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--card-border);">
+              Detected: <strong style="color: var(--primary);">English / සිංහල Ready</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MEMORY TAB -->
+    <div id="tab-memory" class="tab-content">
+      <div class="memory-toolbar">
+        <input type="text" id="memorySearchInput" class="search-input" placeholder="Search huge shared memory (Sinhala / English vector search)..." oninput="loadMemories()">
+        <select id="memoryTierFilter" class="select-dropdown" onchange="loadMemories()">
+          <option value="">සියලු Tiers (All Tiers)</option>
+          <option value="facts">Facts (දීර්ඝකාලීන කරුණු)</option>
+          <option value="knowledge">Knowledge (අන්තර්ජාලයෙන් උගත්)</option>
+          <option value="chat">Chat (සංවාද ඉතිහාසය)</option>
+          <option value="tasks">Tasks (කාර්ය ඉතිහාසය)</option>
+        </select>
+        <button class="btn btn-primary" onclick="openAddMemoryModal()">➕ Add Memory</button>
+        <button class="btn" onclick="exportMemories('json')">📥 Export JSON</button>
+        <button class="btn" onclick="exportMemories('markdown')">📄 Export Markdown</button>
+      </div>
+
+      <div id="memoryList" class="memory-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- 3. TASKS TAB -->
+    <div id="tab-tasks" class="tab-content">
+      <div id="taskConfirmationBanner" class="task-banner" style="display: none;">
+        <div>
+          <strong style="color: var(--warning);">⚠️ අවදානම් ක්‍රියාවකට තහවුරු කිරීම අවශ්‍යයි (Action Confirmation Required)</strong>
+          <p id="taskConfirmationText" style="font-size: 0.85rem; margin-top: 0.25rem;">Do you authorize deleting the production cache?</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-primary" onclick="confirmTaskAction(true)">Approve (අනුමත කරන්න)</button>
+          <button class="btn btn-danger" onclick="confirmTaskAction(false)">Reject (ප්‍රතික්ෂේප කරන්න)</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="chat-container" style="padding: 1.25rem;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">කාර්ය සැලසුම්කරු (Task Agent Loop)</h2>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <input type="text" id="taskTitleInput" class="chat-input" placeholder="e.g. 'Scaffold React Native module and build APK'">
+            <button class="btn btn-primary" onclick="startNewTask()">🚀 Plan & Execute Task</button>
+          </div>
+          <div id="taskLiveSteps" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- Live steps -->
+          </div>
+        </div>
+
+        <div class="chat-container" style="padding: 1.25rem;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">ක්‍රියාකාරී කාර්ය පෝලිම (Task Queue)</h2>
+          <div id="taskQueueList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Task items -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. CODING AGENT TAB -->
+    <div id="tab-coding" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h2>කේතකරණ සහායක (Coding Agent & Sandbox)</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Isolated JavaScript/Python/Shell execution, project scaffolding & self-debugging loop.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-primary" onclick="runSandboxCode()">▶️ Run in Sandbox</button>
+          <button class="btn" onclick="triggerApkBuild()">📱 Build APK via GitHub Actions</button>
+        </div>
+      </div>
+
+      <textarea id="codeEditorInput" style="width: 100%; height: 200px; background: #0f172a; color: #f8fafc; font-family: var(--font-mono); padding: 1rem; border-radius: 8px; border: 1px solid var(--card-border); outline: none; margin-bottom: 1rem;">// Autonomous bilingual coding test
+function calculateBilingualScore(text) {
+  const isSinhala = /[\u0D80-\u0DFF]/.test(text);
+  console.log("Analyzing text:", text);
+  console.log("Contains Sinhala script:", isSinhala);
+  return { text, isSinhala, processedAt: new Date().toISOString() };
+}
+
+calculateBilingualScore("ආයුබෝවන් AI Brain!");
+      </textarea>
+
+      <div class="card-title">Console Output & Test Runner</div>
+      <div id="codingConsoleOutput" class="code-console">AI Brain Sandbox Ready. Press "Run in Sandbox" to execute.</div>
+    </div>
+
+    <!-- 5. CONTINUOUS LEARNING TAB -->
+    <div id="tab-learning" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2>නිරන්තර අන්තර්ජාල ඉගෙනුම (Continuous Internet Learning Feed)</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Background crawler discovers facts, cleans, chunks, cross-checks across multiple sources.</p>
+        </div>
+        <button class="btn btn-primary" onclick="triggerWebCrawl()">🔍 Run Scheduled Topic Crawl</button>
+      </div>
+
+      <div id="learningFeedList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <!-- Learning feed cards -->
+      </div>
+    </div>
+
+    <!-- 6. SETTINGS & ACCESS TAB -->
+    <div id="tab-settings" class="tab-content">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="chat-container" style="padding: 1.5rem;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 0.75rem;">ගිණුම් යතුර (Account Key)</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">One Account Key connects Android APK, Web App, Browser Extension, and SDK into the exact same memory.</p>
+          <div style="background: #0f172a; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--card-border); font-family: var(--font-mono); font-size: 0.9rem; color: var(--primary); word-break: break-all;">
+            brain_acc_master_default_2026
+          </div>
+
+          <h3 style="font-size: 0.95rem; margin-top: 1.5rem; margin-bottom: 0.5rem;">API යතුරු (API Keys)</h3>
+          <div id="apiKeysList" style="margin-bottom: 1rem;">
+            <!-- Api keys -->
+          </div>
+          <button class="btn btn-primary" onclick="generateNewApiKey()">➕ Generate New API Key</button>
+        </div>
+
+        <div class="chat-container" style="padding: 1.5rem;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 0.75rem;">📱 Android APK බාගත කිරීම (APK Download)</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Install AI Brain on Android for floating bubble, system-wide text selection, share target, and accessibility reading.</p>
+          <a href="/api/v1/apk/download" class="btn btn-primary" style="display: inline-flex; text-decoration: none;">⬇️ Download AI Brain APK</a>
+          <div style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
+            <p><strong>System-wide Permissions:</strong></p>
+            <p>✓ <code>SYSTEM_ALERT_WINDOW</code>: Floating Bubble over any app</p>
+            <p>✓ <code>ACCESSIBILITY_SERVICE</code>: Read & act inside other apps (explicit user consent)</p>
+            <p>✓ <code>PROCESS_TEXT</code>: Text selection popup action</p>
+            <p>✓ <code>ACTION_SEND</code>: Share sheet target</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ADD MEMORY MODAL -->
+  <div id="addMemoryModal" class="modal-overlay">
+    <div class="modal">
+      <h3 style="margin-bottom: 1rem;">මතකයක් එක් කරන්න (Add Memory Entry)</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <select id="modalMemoryTier" class="select-dropdown">
+          <option value="facts">Facts (දීර්ඝකාලීන කරුණු)</option>
+          <option value="knowledge">Knowledge (සාමාන්‍ය දැනුම)</option>
+          <option value="chat">Chat (සංවාද)</option>
+        </select>
+        <textarea id="modalMemoryContent" style="width: 100%; height: 100px; background: #0f172a; color: var(--text); border: 1px solid var(--card-border); border-radius: 8px; padding: 0.75rem;" placeholder="Enter knowledge or personal fact in Sinhala or English..."></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+          <button class="btn" onclick="closeAddMemoryModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitAddMemory()">Save Memory</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentApiKey = 'brain_key_master_sinhala_english_universal_access';
+    let ttsEnabled = true;
+    let recognition = null;
+    let isRecording = false;
+
+    // TAB NAVIGATION
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      
+      const tabEl = document.getElementById('tab-' + tabId);
+      if (tabEl) tabEl.classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if (tabId === 'memory') loadMemories();
+      if (tabId === 'tasks') loadTasks();
+      if (tabId === 'learning') loadLearningFeed();
+      if (tabId === 'settings') loadSettings();
+    }
+
+    // TYPING & SINGLISH PREVIEW
+    async function handleInputTyping() {
+      const input = document.getElementById('chatInput').value;
+      const previewBox = document.getElementById('singlishPreview');
+      const previewText = document.getElementById('singlishConvertedText');
+
+      if (!input || input.trim().length === 0) {
+        previewBox.style.display = 'none';
+        return;
+      }
+
+      // Check language detection
+      try {
+        const res = await fetch('/api/v1/chat/detect-language', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: input })
+        });
+        const data = await res.json();
+        if (data.success && data.detection) {
+          const badge = document.getElementById('detectedLanguageBadge');
+          badge.innerHTML = `Detected: <strong style="color: var(--primary);">${data.detection.language.toUpperCase()}</strong> (Confidence: ${(data.detection.confidence * 100).toFixed(0)}%)`;
+
+          if (data.detection.isSinglish && data.detection.transliteration) {
+            previewBox.style.display = 'block';
+            previewText.innerText = data.detection.transliteration;
+          } else {
+            previewBox.style.display = 'none';
+          }
+        }
+      } catch (err) {}
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    // CHAT ENGINE
+    async function sendMessage() {
+      const inputEl = document.getElementById('chatInput');
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      appendChatMessage('user', text);
+      inputEl.value = '';
+      document.getElementById('singlishPreview').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/v1/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + currentApiKey
+          },
+          body: JSON.stringify({
+            message: text,
+            clientType: 'web_dashboard'
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          appendChatMessage('assistant', data.reply, data.retrievedMemories);
+          if (ttsEnabled) {
+            speakText(data.reply, data.language);
+          }
+          refreshStats();
+        } else {
+          appendChatMessage('assistant', 'දෝෂයක් ඇති විය (Error): ' + (data.error || 'Server error'));
+        }
+      } catch (err) {
+        appendChatMessage('assistant', 'සම්බන්ධතා දෝෂයකි (Connection error): ' + err.message);
+      }
+    }
+
+    function appendChatMessage(role, text, memories) {
+      const container = document.getElementById('chatMessages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message ' + role;
+
+      let metaHtml = `<div class="message-meta">
+        <span>${role === 'user' ? '👤 ඔබ (You)' : '🧠 AI Brain'}</span>`;
+      
+      if (memories && memories.length > 0) {
+        metaHtml += `<span class="memory-tag">🔗 ${memories.length} Memories Linked</span>`;
+      }
+      metaHtml += `</div>`;
+
+      msgDiv.innerHTML = metaHtml + `<p>${text.replace(/\n/g, '<br>')}</p>`;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // VOICE STT & TTS
+    function toggleVoiceInput() {
+      const btn = document.getElementById('voiceBtn');
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Web Speech API is not supported in this browser. Please use Chrome/Edge or the Android app.');
+        return;
+      }
+
+      if (isRecording) {
+        if (recognition) recognition.stop();
+        isRecording = false;
+        btn.classList.remove('recording');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      // Sinhala locale with English fallback
+      recognition.lang = 'si-LK';
+
+      recognition.onstart = () => {
+        isRecording = true;
+        btn.classList.add('recording');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(r => r[0].transcript)
+          .join('');
+        document.getElementById('chatInput').value = transcript;
+        handleInputTyping();
+      };
+
+      recognition.onerror = (e) => {
+        // Fallback to English locale if Sinhala not installed
+        if (recognition.lang === 'si-LK') {
+          recognition.lang = 'en-US';
+          recognition.start();
+        }
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        btn.classList.remove('recording');
+      };
+
+      recognition.start();
+    }
+
+    function toggleTTS() {
+      ttsEnabled = !ttsEnabled;
+      const btn = document.getElementById('ttsBtn');
+      btn.style.opacity = ttsEnabled ? '1.0' : '0.4';
+    }
+
+    function speakText(text, lang) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === 'si' ? 'si-LK' : 'en-US';
+      utterance.rate = lang === 'si' ? 0.95 : 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // MEMORY DASHBOARD
+    async function loadMemories() {
+      const query = document.getElementById('memorySearchInput').value;
+      const tier = document.getElementById('memoryTierFilter').value;
+
+      try {
+        let url = `/api/v1/memories?query=${encodeURIComponent(query)}`;
+        if (tier) url += `&tier=${encodeURIComponent(tier)}`;
+
+        const res = await fetch(url, {
+          headers: { 'Authorization': 'Bearer ' + currentApiKey }
+        });
+        const data = await res.json();
+
+        const container = document.getElementById('memoryList');
+        container.innerHTML = '';
+
+        if (!data.memories || data.memories.length === 0) {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2rem;">මතක සටහන් කිසිවක් හමු නොවීය (No memories found).</div>`;
+          return;
+        }
+
+        data.memories.forEach(mem => {
+          const card = document.createElement('div');
+          card.className = 'memory-card';
+          card.innerHTML = `
+            <div class="memory-body">
+              <div class="memory-header">
+                <span class="badge badge-${mem.tier}">${mem.tier}</span>
+                <span style="font-size: 0.75rem; color: var(--primary);">Score: ${Number(mem.importanceScore).toFixed(2)}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(mem.createdAt).toLocaleDateString()}</span>
+              </div>
+              <div class="memory-text">${mem.content}</div>
+              <div class="memory-meta">
+                <span>Source: ${mem.sourceType}</span>
+                ${mem.sourceUrl ? `<span>URL: <a href="${mem.sourceUrl}" target="_blank" style="color: var(--primary);">${mem.sourceUrl}</a></span>` : ''}
+                <span>Lang: ${mem.language}</span>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="deleteMemory('${mem.id}')">Delete</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {}
+    }
+
+    function openAddMemoryModal() {
+      document.getElementById('addMemoryModal').classList.add('open');
+    }
+
+    function closeAddMemoryModal() {
+      document.getElementById('addMemoryModal').classList.remove('open');
+    }
+
+    async function submitAddMemory() {
+      const tier = document.getElementById('modalMemoryTier').value;
+      const content = document.getElementById('modalMemoryContent').value;
+      if (!content.trim()) return;
+
+      await fetch('/api/v1/memories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + currentApiKey
+        },
+        body: JSON.stringify({ tier, content, sourceType: 'web_dashboard' })
+      });
+
+      closeAddMemoryModal();
+      document.getElementById('modalMemoryContent').value = '';
+      loadMemories();
+      refreshStats();
+    }
+
+    async function deleteMemory(id) {
+      if (!confirm('Are you sure you want to permanently delete this memory entry?')) return;
+      await fetch(`/api/v1/memories/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + currentApiKey }
+      });
+      loadMemories();
+      refreshStats();
+    }
+
+    function exportMemories(format) {
+      window.open(`/api/v1/memories/export?format=${format}&apiKey=${currentApiKey}`, '_blank');
+    }
+
+    // STATS
+    async function refreshStats() {
+      try {
+        const res = await fetch('/api/v1/memories?limit=1000', {
+          headers: { 'Authorization': 'Bearer ' + currentApiKey }
+        });
+        const data = await res.json();
+        if (data.memories) {
+          document.getElementById('statTotalMemories').innerText = data.memories.length;
+          document.getElementById('statFactsCount').innerText = data.memories.filter(m => m.tier === 'facts').length;
+          document.getElementById('statKnowledgeCount').innerText = data.memories.filter(m => m.tier === 'knowledge').length;
+          document.getElementById('statTasksCount').innerText = data.memories.filter(m => m.tier === 'tasks').length;
+        }
+      } catch (err) {}
+    }
+
+    // TASKS & CODING EXECUTION
+    async function loadTasks() {
+      try {
+        const res = await fetch('/api/v1/tasks', {
+          headers: { 'Authorization': 'Bearer ' + currentApiKey }
+        });
+        const data = await res.json();
+        const container = document.getElementById('taskQueueList');
+        container.innerHTML = '';
+        if (data.tasks) {
+          data.tasks.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'stat-card';
+            div.innerHTML = `<strong>${t.title}</strong> - Status: <span style="color: var(--primary);">${t.status}</span> (Progress: ${t.progress}%)`;
+            container.appendChild(div);
+          });
+        }
+      } catch (e) {}
+    }
+
+    async function startNewTask() {
+      const title = document.getElementById('taskTitleInput').value.trim();
+      if (!title) return;
+      
+      const liveContainer = document.getElementById('taskLiveSteps');
+      liveContainer.innerHTML = `<div style="font-size: 0.85rem; color: var(--primary);">⏳ Planning agent execution loop for: "${title}"...</div>`;
+
+      try {
+        const res = await fetch('/api/v1/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + currentApiKey
+          },
+          body: JSON.stringify({ title })
+        });
+        const data = await res.json();
+        if (data.task) {
+          liveContainer.innerHTML += `<div style="font-size: 0.85rem; color: var(--success);">✓ Task initiated (ID: ${data.task.id.slice(0,8)})</div>`;
+          loadTasks();
+        }
+      } catch (e) {}
+    }
+
+    async function runSandboxCode() {
+      const code = document.getElementById('codeEditorInput').value;
+      const consoleEl = document.getElementById('codingConsoleOutput');
+      consoleEl.innerText = 'Executing in safe sandbox...\n';
+
+      try {
+        const res = await fetch('/api/v1/sandbox/run', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + currentApiKey
+          },
+          body: JSON.stringify({ language: 'javascript', code })
+        });
+        const data = await res.json();
+        consoleEl.innerText = `[Exit Code: ${data.exitCode}] [Duration: ${data.durationMs}ms]\n\nSTDOUT:\n${data.stdout || '(no output)'}\n\nSTDERR:\n${data.stderr || '(no errors)'}`;
+      } catch (err) {
+        consoleEl.innerText = 'Sandbox run error: ' + err.message;
+      }
+    }
+
+    async function triggerApkBuild() {
+      const consoleEl = document.getElementById('codingConsoleOutput');
+      consoleEl.innerText = 'Triggering GitHub Actions Android APK build workflow...\n';
+
+      try {
+        const res = await fetch('/api/v1/github/build-apk', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + currentApiKey
+          }
+        });
+        const data = await res.json();
+        consoleEl.innerText = JSON.stringify(data, null, 2);
+      } catch (e) {
+        consoleEl.innerText = 'Error: ' + e.message;
+      }
+    }
+
+    async function loadLearningFeed() {
+      try {
+        const res = await fetch('/api/v1/learning/feed', {
+          headers: { 'Authorization': 'Bearer ' + currentApiKey }
+        });
+        const data = await res.json();
+        const container = document.getElementById('learningFeedList');
+        container.innerHTML = '';
+        if (data.items && data.items.length > 0) {
+          data.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'memory-card';
+            div.innerHTML = `
+              <div class="memory-body">
+                <div class="memory-header">
+                  <span class="badge badge-knowledge">${item.topic}</span>
+                  <span style="font-size: 0.75rem; color: var(--success);">Cross-checked: ${item.crossCheckCount} sources</span>
+                  <span style="font-size: 0.75rem; color: var(--primary);">Confidence: ${(item.confidence * 100).toFixed(0)}%</span>
+                </div>
+                <div class="memory-text">${item.extractedSummary}</div>
+                <div class="memory-meta"><span>Source: ${item.sourceDomain} (${item.sourceUrl})</span></div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="approveLearning('${item.id}')">Approve</button>
+                <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="rejectLearning('${item.id}')">Reject</button>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        } else {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending learning items. Press "Run Scheduled Topic Crawl" to start.</div>`;
+        }
+      } catch (e) {}
+    }
+
+    async function approveLearning(id) {
+      await fetch(`/api/v1/learning/approve/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + currentApiKey }
+      });
+      loadLearningFeed();
+      refreshStats();
+    }
+
+    async function rejectLearning(id) {
+      await fetch(`/api/v1/learning/reject/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + currentApiKey }
+      });
+      loadLearningFeed();
+    }
+
+    async function triggerWebCrawl() {
+      await fetch('/api/v1/learning/crawl', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + currentApiKey },
+        body: JSON.stringify({ topic: 'AI Innovations in Sri Lanka' })
+      });
+      loadLearningFeed();
+    }
+
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/v1/auth/keys', {
+          headers: { 'Authorization': 'Bearer ' + currentApiKey }
+        });
+        const data = await res.json();
+        const list = document.getElementById('apiKeysList');
+        list.innerHTML = '';
+        if (data.keys) {
+          data.keys.forEach(k => {
+            const div = document.createElement('div');
+            div.style.cssText = 'background: #0f172a; padding: 0.6rem; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.8rem; display: flex; justify-content: space-between;';
+            div.innerHTML = `<span><strong>${k.label}</strong> (${k.keyPrefix}...)</span><span style="color: var(--success);">Active</span>`;
+            list.appendChild(div);
+          });
+        }
+      } catch (e) {}
+    }
+
+    async function generateNewApiKey() {
+      const label = prompt('Enter a label for this API Key (e.g. Android Mobile App, Chrome Extension):');
+      if (!label) return;
+      const res = await fetch('/api/v1/auth/keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + currentApiKey
+        },
+        body: JSON.stringify({ label })
+      });
+      const data = await res.json();
+      if (data.apiKey) {
+        prompt('Copy your new API key now (it will not be shown again):', data.apiKey);
+        loadSettings();
+      }
+    }
+
+    async function toggleKillSwitch() {
+      if (!confirm('EMERGENCY KILL SWITCH: Are you sure you want to halt all agent activity, background workers, and API access?')) return;
+      const res = await fetch('/api/v1/auth/kill-switch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + currentApiKey
+        },
+        body: JSON.stringify({ enabled: true })
+      });
+      const data = await res.json();
+      alert(data.message);
+      document.getElementById('systemStatus').innerText = 'KILLED (HALTED)';
+      document.getElementById('systemStatus').style.color = '#ef4444';
+    }
+
+    // Init
+    refreshStats();
+  </script>
+</body>
+</html>

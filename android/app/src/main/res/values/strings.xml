@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AI Brain</string>
+    <string name="accessibility_service_label">AI Brain System Assist Service</string>
+    <string name="accessibility_service_description">Reads screen context and assists inside other apps with explicit user consent. Displays a visible green indicator when active.</string>
+    <string name="bubble_service_label">AI Brain Floating Bubble</string>
+    <string name="action_process_text">Ask AI Brain (සිංහල / English)</string>
+    <string name="share_target_title">Send to AI Brain Memory</string>
+</resources>

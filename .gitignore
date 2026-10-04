@@ -20,6 +20,13 @@ model/runs/
 !model/tokenizer/rs_sp.model
 !model/tokenizer/rs_sp.vocab
 
+# Node.js
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.DS_Store
+
 # Android / Gradle
 android-app/.gradle/
 android-app/local.properties

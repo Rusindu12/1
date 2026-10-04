@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      background: #0b0f19;
+      color: #f8fafc;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    h2 { font-size: 15px; margin: 0 0 8px; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    p { font-size: 12px; color: #94a3b8; margin: 0 0 12px; line-height: 1.4; }
+    label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #121826;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      color: #fff;
+      padding: 8px;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      background: #38bdf8;
+      border: none;
+      color: #0b0f19;
+      font-weight: bold;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .status { font-size: 11px; text-align: center; margin-top: 8px; color: #10b981; }
+  </style>
+</head>
+<body>
+  <h2>🧠 AI Brain Settings</h2>
+  <p>Shared Cloud Memory & Universal Bilingual Assistant</p>
+  
+  <label>Server URL:</label>
+  <input type="text" id="serverUrl" value="http://localhost:3000">
+
+  <label>Universal Account / API Key:</label>
+  <input type="password" id="apiKey" value="brain_key_master_sinhala_english_universal_access">
+
+  <button id="saveBtn">Save & Sync</button>
+  <div id="status" class="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
