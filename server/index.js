@@ -12,6 +12,7 @@ const MAX_PAGE = 1_200_000;
 const MAX_SOURCES = 5;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MEMORY_FILE = process.env.MEMORY_FILE || path.join(__dirname, "data", "memories.json");
+const AGENT_FILE = process.env.AGENT_FILE || path.join(__dirname, "data", "agent.json");
 const allowedHosts = (process.env.RESEARCH_ALLOWLIST || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 
 app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true }));
@@ -99,7 +100,36 @@ async function fetchPage(rawUrl) {
   return { url: url.toString(), text };
 }
 
+async function readAgent() {
+  try { return JSON.parse(await fs.readFile(AGENT_FILE, "utf8")); }
+  catch { return { enabled: process.env.AGENT_AUTOSTART === "true", goals: (process.env.AGENT_GOALS || "AI technology,Sri Lanka news,science").split(",").map(s => s.trim()).filter(Boolean), cursor: 0, runs: 0, lastRun: null, lastError: null, dailyRuns: 0, day: new Date().toISOString().slice(0, 10) }; }
+}
+async function writeAgent(state) { await fs.mkdir(path.dirname(AGENT_FILE), { recursive: true }); await fs.writeFile(AGENT_FILE, JSON.stringify(state, null, 2)); }
+async function agentTick() {
+  const state = await readAgent();
+  const today = new Date().toISOString().slice(0, 10);
+  if (state.day !== today) { state.day = today; state.dailyRuns = 0; }
+  const limit = Number(process.env.AGENT_DAILY_LIMIT || 12);
+  if (!state.enabled || !state.goals.length || state.dailyRuns >= limit) return;
+  const goal = state.goals[state.cursor % state.goals.length]; state.cursor++;
+  try {
+    const headers = { "content-type": "application/json" };
+    if (process.env.RESEARCH_API_KEY) headers.authorization = `Bearer ${process.env.RESEARCH_API_KEY}`;
+    const response = await fetch(`http://127.0.0.1:${PORT}/api/research`, { method: "POST", headers, body: JSON.stringify({ query: goal }) });
+    if (!response.ok) throw new Error(`research returned ${response.status}`);
+    state.runs++; state.dailyRuns++; state.lastRun = { goal, at: new Date().toISOString() }; state.lastError = null;
+  } catch (error) { state.lastError = error.message; }
+  await writeAgent(state);
+}
+const agentTimer = setInterval(agentTick, Math.max(5, Number(process.env.AGENT_INTERVAL_MINUTES || 60)) * 60 * 1000);
+agentTimer.unref();
+if (process.env.AGENT_AUTOSTART === "true") setTimeout(agentTick, 3000);
+
 app.get("/health", (_req, res) => res.json({ ok: true, service: "ai-brain-web-research" }));
+app.get("/api/agent/status", async (_req, res) => res.json(await readAgent()));
+app.post("/api/agent/start", async (_req, res) => { const s = await readAgent(); s.enabled = true; await writeAgent(s); res.json(s); });
+app.post("/api/agent/stop", async (_req, res) => { const s = await readAgent(); s.enabled = false; await writeAgent(s); res.json(s); });
+app.post("/api/agent/goals", async (req, res) => { const goals = Array.isArray(req.body?.goals) ? req.body.goals.map(String).map(s => s.trim()).filter(Boolean).slice(0, 30) : []; if (!goals.length) return res.status(400).json({ error: "at least one goal is required" }); const s = await readAgent(); s.goals = goals; s.cursor = 0; await writeAgent(s); res.json(s); });
 app.get("/api/memories", async (req, res) => {
   const q = String(req.query.q || "").toLowerCase();
   const memories = await readMemories();

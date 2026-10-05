@@ -28,4 +28,10 @@ For full AI chat and AI-generated research summaries, configure an OpenAI-compat
 - This stores summaries and citations; it does **not** silently change model weights or execute code.
 - The brain should treat memories as untrusted research and show the source links to the user.
 
-The hosted website must call this API from its chat/research action. The Android APK currently wraps the hosted website; deploy this backend and configure the website's API URL before the APK can use autonomous research.
+## Automatic brain development
+
+The server can run the research loop independently, so it continues when the phone or PC app is closed. It rotates through configured goals, saves cited memories, and respects a daily budget. It does not rewrite its own code, install software, trade, send messages, or take irreversible actions.
+
+Set `AGENT_AUTOSTART=true`, `AGENT_INTERVAL_MINUTES=60`, and `AGENT_DAILY_LIMIT=12` to enable it on the server. Or control it from the app's **Automatic Brain Development** panel. The `/api/agent/status`, `/api/agent/start`, `/api/agent/stop`, and `/api/agent/goals` endpoints are available. Keep the API key enabled in production.
+
+The Android app and PC/browser app use the same backend URL, so memories and agent status are shared across devices. Deploy this backend behind HTTPS and configure the app's API URL before using autonomous research.
