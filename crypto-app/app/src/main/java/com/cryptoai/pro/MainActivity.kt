@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
 
-        if (savedInstanceState == null) web.loadUrl(HOME_URL)
+        if (savedInstanceState == null) web.loadUrl("file:///android_asset/ai-brain/index.html")
         else web.restoreState(savedInstanceState)
     }
 

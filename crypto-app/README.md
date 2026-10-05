@@ -1,8 +1,10 @@
 # AI Brain — Android app (Sinhala + English hosted AI assistant)
 
-This APK wraps the deployed AI Brain at `https://p1men83qhkg1-d.space-z.ai/` in a native Android WebView. It supports Sinhala, English and Singlish, with normal Android back navigation and external links opening in the browser.
+This APK is a standalone AI Brain app. It includes a local Sinhala/English/Singlish chat UI and a **Learn from Web** action. Set the deployed research API URL under API settings; the app then stores cited research memories and uses them in chat.
 
-> The older crypto terminal implementation remains in the repository for reference; the Android launcher now opens AI Brain.
+The research API is in `server/` (`npm install && npm start`). Set `RESEARCH_API_KEY` in production. The API can optionally call an OpenAI-compatible provider using `AI_API_URL`, `AI_API_KEY`, and `AI_MODEL`.
+
+> The older crypto terminal implementation remains in the repository for reference. The Android launcher now opens the standalone AI Brain UI.
 
 A market/chart/signal/trading terminal inside a WebView shell: **markets dashboard, candlestick
 charts with EMA/Bollinger/volume/RSI, a rule-based signal engine, paper + live trading, an

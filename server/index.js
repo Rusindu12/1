@@ -119,4 +119,19 @@ app.post("/api/research", async (req, res) => {
   } catch (error) { res.status(502).json({ error: error.message }); }
 });
 
+app.post("/api/chat", async (req, res) => {
+  const message = String(req.body?.message || "").trim();
+  if (!message || message.length > 4000) return res.status(400).json({ error: "message must be 1-4000 characters" });
+  const memories = await readMemories();
+  const context = memories.slice(-8).map(m => `Topic: ${m.topic}\n${m.summary}\nSources: ${m.sources.join(", ")}`).join("\n\n");
+  if (process.env.AI_API_URL && process.env.AI_API_KEY) {
+    const response = await fetch(process.env.AI_API_URL, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${process.env.AI_API_KEY}` }, body: JSON.stringify({ model: process.env.AI_MODEL || "gpt-4o-mini", messages: [{ role: "system", content: "You are AI Brain. Answer in the user's language. Use the research memory below when relevant, cite URLs, and say when you are unsure. Do not invent facts.\n\n" + context }, { role: "user", content: message }] }), signal: AbortSignal.timeout(30000) });
+    if (!response.ok) return res.status(502).json({ error: `AI provider returned ${response.status}` });
+    const data = await response.json();
+    return res.json({ reply: data.choices?.[0]?.message?.content || "No reply", memoriesUsed: memories.length });
+  }
+  const related = memories.filter(m => `${m.topic} ${m.summary}`.toLowerCase().includes(message.toLowerCase().split(/\\s+/)[0])).slice(-3);
+  res.json({ reply: related.length ? `I found ${related.length} related research memory.\\n\\n${related.map(m => m.summary).join("\\n\\n")}` : "I am ready. Add an AI_API_URL and AI_API_KEY on the server for full conversational answers, or use Learn from Web to give me a topic.", memoriesUsed: related.length, setupRequired: true });
+});
+
 app.listen(PORT, "0.0.0.0", () => console.log(`AI Brain research API listening on 0.0.0.0:${PORT}`));
