@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
 
-        if (savedInstanceState == null) web.loadUrl("file:///android_asset/index.html")
+        if (savedInstanceState == null) web.loadUrl(HOME_URL)
         else web.restoreState(savedInstanceState)
     }
 
