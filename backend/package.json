@@ -1,0 +1,12 @@
+{
+  "name": "ai-brain-research-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bounded web research and memory API for AI Brain",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check research.js && node --check memory.js"
+  },
+  "engines": { "node": ">=18" }
+}

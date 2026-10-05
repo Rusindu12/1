@@ -48,6 +48,16 @@ Push එකක් `crypto-app/**` ට වෙනස් වුණාම GitHub Act
 
 Install guide (සිංහල): [crypto-app/INSTALL_SI.md](crypto-app/INSTALL_SI.md)
 
+## 🧠 AI Brain web learning backend
+
+A bounded research backend is included in `backend/`. It can search public web results, fetch safe HTTPS pages, extract facts, and persist source-linked memories for the AI Brain:
+
+```bash
+cd backend && npm run check && npm start
+```
+
+See [backend/README.md](backend/README.md). It blocks private-network targets, credentials and redirects, limits page size/sources/rate, and should be deployed behind HTTPS plus authentication before public use.
+
 ## 🌐 Web / PWA
 
 ```bash

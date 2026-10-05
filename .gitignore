@@ -30,6 +30,7 @@ android-app/local.properties
 # Secrets — API keys (use server/.env.example as the template)
 .env
 server/.env
+backend/data/
 
 # Teach/runtime data (per-deployment, not source)
 model/data/rs_memory.json
