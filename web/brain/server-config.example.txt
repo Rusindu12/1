@@ -1,0 +1,14 @@
+PORT=8787
+CORS_ORIGIN=https://your-ai-brain-site.example
+RESEARCH_API_KEY=change-this-long-random-value
+# OpenAI-compatible provider. OpenRouter example:
+AI_API_URL=https://openrouter.ai/api/v1/chat/completions
+AI_API_KEY=your-provider-key
+AI_MODEL=openai/gpt-4o-mini
+# Optional domain restriction:
+# RESEARCH_ALLOWLIST=wikipedia.org,docs.example.com
+# Server-side automatic research loop (shared by phone and PC):
+AGENT_AUTOSTART=false
+AGENT_INTERVAL_MINUTES=60
+AGENT_DAILY_LIMIT=12
+AGENT_GOALS=AI technology,science,Sri Lanka news
