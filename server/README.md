@@ -35,3 +35,16 @@ The server can run the research loop independently, so it continues when the pho
 Set `AGENT_AUTOSTART=true`, `AGENT_INTERVAL_MINUTES=60`, and `AGENT_DAILY_LIMIT=12` to enable it on the server. Or control it from the app's **Automatic Brain Development** panel. The `/api/agent/status`, `/api/agent/start`, `/api/agent/stop`, and `/api/agent/goals` endpoints are available. Keep the API key enabled in production.
 
 The Android app and PC/browser app use the same backend URL, so memories and agent status are shared across devices. Deploy this backend behind HTTPS and configure the app's API URL before using autonomous research.
+
+## YouTube channel connection
+
+The backend includes OAuth and upload endpoints:
+
+- `GET /api/youtube/auth` returns the Google authorization URL.
+- `GET /api/youtube/callback` saves the refresh token on the server.
+- `GET /api/youtube/status` checks the connection.
+- `POST /api/youtube/upload` accepts a multipart `video` file plus `title` and `description`.
+
+Create a Google Cloud OAuth Web Client, add the exact callback URL from `.env`, open the auth URL, and approve only the requested YouTube upload permission. Keep `YOUTUBE_DEFAULT_PRIVACY=private` while testing. Public automatic publishing requires explicitly setting `YOUTUBE_ALLOW_PUBLIC=true`.
+
+The current backend securely handles research, AI scripts/summaries, OAuth and upload. A production video factory still needs a configured TTS/voice provider, licensed visual assets or an approved video generator, and an FFmpeg worker. Those must be configured before the agent can truthfully create and publish complete videos; it must not scrape copyrighted videos or clone a person’s voice without permission.

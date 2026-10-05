@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import dns from "node:dns/promises";
 import { fileURLToPath } from "node:url";
+import multer from "multer";
+import { youtubeAuthUrl, saveYoutubeCode, youtubeStatus, uploadYoutubeVideo } from "./youtube.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 8787);
@@ -121,6 +123,19 @@ async function agentTick() {
   } catch (error) { state.lastError = error.message; }
   await writeAgent(state);
 }
+const upload = multer({ dest: path.join(__dirname, "data", "uploads"), limits: { fileSize: 500 * 1024 * 1024 } });
+app.get("/api/youtube/auth", (_req, res) => { try { res.json({ url: youtubeAuthUrl() }); } catch (e) { res.status(503).json({ error: e.message }); } });
+app.get("/api/youtube/callback", async (req, res) => { try { await saveYoutubeCode(String(req.query.code || "")); res.send("YouTube connected. You can close this page."); } catch (e) { res.status(400).send(e.message); } });
+app.get("/api/youtube/status", async (_req, res) => res.json(await youtubeStatus()));
+app.post("/api/youtube/upload", upload.single("video"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "video file is required" });
+  const privacyStatus = process.env.YOUTUBE_DEFAULT_PRIVACY || "private";
+  if (privacyStatus === "public" && process.env.YOUTUBE_ALLOW_PUBLIC !== "true") return res.status(403).json({ error: "Public upload is disabled until YOUTUBE_ALLOW_PUBLIC=true" });
+  try { const result = await uploadYoutubeVideo({ filePath: req.file.path, title: String(req.body.title || "AI Brain video").slice(0, 100), description: String(req.body.description || "").slice(0, 5000), privacyStatus }); res.json(result); }
+  catch (e) { res.status(502).json({ error: e.message }); }
+  finally { await fs.rm(req.file.path, { force: true }); }
+});
+
 const agentTimer = setInterval(agentTick, Math.max(5, Number(process.env.AGENT_INTERVAL_MINUTES || 60)) * 60 * 1000);
 agentTimer.unref();
 if (process.env.AGENT_AUTOSTART === "true") setTimeout(agentTick, 3000);
