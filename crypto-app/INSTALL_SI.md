@@ -2,10 +2,10 @@
 
 ## 1. APK එක download කරන්න
 
-**👉 https://github.com/Rusindu12/Rs-et/releases/download/cryptoai-apk-latest/CryptoAI-PRO.apk**
+**👉 https://github.com/Rusindu12/1/releases/download/cryptoai-apk-latest/CryptoAI-PRO.apk**
 
-(හැම push එකකට පස්සේ GitHub Actions එකෙන් auto-build වෙනවා — release page එක:
-https://github.com/Rusindu12/Rs-et/releases/tag/cryptoai-apk-latest)
+(හැම `crypto-app/` වෙනස්කමකටම GitHub Actions එකෙන් APK auto-build වෙනවා — release page එක:
+https://github.com/Rusindu12/1/releases/tag/cryptoai-apk-latest)
 
 > Android 7.0 (API 24) හෝ ඊට ඉහළ ඕනම phone එකක වැඩ කරයි. File එක ~3.7 MB.
 
@@ -61,8 +61,7 @@ https://github.com/Rusindu12/Rs-et/releases/tag/cryptoai-apk-latest)
 
 ---
 
-**Developer:** `arena/01a0bf18-rs-et` branch එකේ commit `1de6956` එකෙන් build වූවක්
-(CI run: CryptoAI PRO APK ✅). Source: `crypto-app/`.
+**Build:** Version 50.0 (`versionCode` 50). `crypto-app/` source එකෙන් GitHub Actions මඟින් APK එක auto-build කරයි.
 
 ## 4. ⏰ 24/7 auto-trading (app එක close වුණත් bot එක ක්‍රියාත්මක)
 

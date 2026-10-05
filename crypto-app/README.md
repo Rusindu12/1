@@ -24,7 +24,8 @@ HTTP proxy for OpenRouter/HuggingFace, notifications, TTS, haptics, foreground s
 ## APK download
 
 Every push that touches `crypto-app/**` builds a debug APK via GitHub Actions:
-- Release (permanent link): https://github.com/Rusindu12/Rs-et/releases/tag/cryptoai-apk-latest
+- Latest APK (this repository): https://github.com/Rusindu12/1/releases/download/cryptoai-apk-latest/CryptoAI-PRO.apk
+- Release page: https://github.com/Rusindu12/1/releases/tag/cryptoai-apk-latest
 - Or: Actions tab → "CryptoAI PRO APK" run → `CryptoAI-PRO-debug-apk` artifact
 
 ## What it does
