@@ -7,10 +7,13 @@ Bounded web-learning backend for the hosted AI Brain. It searches DuckDuckGo HTM
 ```bash
 cd server
 npm install
-CORS_ORIGIN=https://your-ai-brain-site.example npm start
+cp .env.example .env
+# edit .env: add your provider key and a random RESEARCH_API_KEY
+set -a; . ./.env; set +a
+npm start
 ```
 
-The API listens on `0.0.0.0:8787` so it can be deployed behind a normal HTTPS reverse proxy.
+For full AI chat and AI-generated research summaries, configure an OpenAI-compatible provider in `.env`. OpenRouter, OpenAI, Together, Groq and a self-hosted server are supported by changing `AI_API_URL`, `AI_API_KEY`, and `AI_MODEL`. Never put this provider key in the APK or browser. The API listens on `0.0.0.0:8787` so it can be deployed behind a normal HTTPS reverse proxy.
 
 - `GET /health`
 - `GET /api/memories?q=optional-search`
