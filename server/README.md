@@ -32,7 +32,7 @@ For full AI chat and AI-generated research summaries, configure an OpenAI-compat
 
 The server can run the research loop independently, so it continues when the phone or PC app is closed. It rotates through configured goals, saves cited memories, and respects a daily budget. It does not rewrite its own code, install software, trade, send messages, or take irreversible actions.
 
-Set `AGENT_AUTOSTART=true`, `AGENT_INTERVAL_MINUTES=60`, and `AGENT_DAILY_LIMIT=12` to enable it on the server. Or control it from the app's **Automatic Brain Development** panel. The `/api/agent/status`, `/api/agent/start`, `/api/agent/stop`, and `/api/agent/goals` endpoints are available. Keep the API key enabled in production.
+Set `AGENT_AUTOSTART=true`, `AGENT_INTERVAL_MINUTES=60`, and `AGENT_DAILY_LIMIT=12` to enable it on the server. Or control it from the app's **Automatic Brain Development** panel. The `/api/agent/status`, `/api/agent/start`, `/api/agent/stop`, and `/api/agent/goals` endpoints are available. Keep the API key enabled in production. Set `AGENT_AUTO_VIDEO=true` only after testing the private upload flow; then each research cycle also creates an original video and uploads it using the configured YouTube privacy setting.
 
 The Android app and PC/browser app use the same backend URL, so memories and agent status are shared across devices. Deploy this backend behind HTTPS and configure the app's API URL before using autonomous research.
 

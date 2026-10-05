@@ -121,6 +121,11 @@ async function agentTick() {
     const response = await fetch(`http://127.0.0.1:${PORT}/api/research`, { method: "POST", headers, body: JSON.stringify({ query: goal }) });
     if (!response.ok) throw new Error(`research returned ${response.status}`);
     state.runs++; state.dailyRuns++; state.lastRun = { goal, at: new Date().toISOString() }; state.lastError = null;
+    if (process.env.AGENT_AUTO_VIDEO === "true") {
+      const video = await createOriginalVideo(goal);
+      const uploaded = await uploadYoutubeVideo({ filePath: video.filePath, title: `AI Brain: ${goal}`.slice(0, 100), description: `Original AI-generated video about ${goal}.`, privacyStatus: process.env.YOUTUBE_DEFAULT_PRIVACY || "private" });
+      state.lastVideo = { goal, ...uploaded, at: new Date().toISOString() };
+    }
   } catch (error) { state.lastError = error.message; }
   await writeAgent(state);
 }
