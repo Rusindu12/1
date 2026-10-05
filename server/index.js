@@ -6,7 +6,6 @@ import dns from "node:dns/promises";
 import { fileURLToPath } from "node:url";
 import multer from "multer";
 import { youtubeAuthUrl, saveYoutubeCode, youtubeStatus, uploadYoutubeVideo } from "./youtube.js";
-import { createOriginalVideo } from "./video-factory.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 8787);
@@ -125,7 +124,6 @@ async function agentTick() {
   await writeAgent(state);
 }
 const upload = multer({ dest: path.join(__dirname, "data", "uploads"), limits: { fileSize: 500 * 1024 * 1024 } });
-app.post("/api/video/create", async (req, res) => { try { const topic = String(req.body?.topic || "").trim(); if (topic.length < 3 || topic.length > 300) return res.status(400).json({ error: "topic must be 3-300 characters" }); const video = await createOriginalVideo(topic); res.json({ id: video.id, script: video.script, file: video.filePath, note: "Original generated video; review before public upload." }); } catch (e) { res.status(502).json({ error: e.message }); } });
 app.get("/api/youtube/auth", (_req, res) => { try { res.json({ url: youtubeAuthUrl() }); } catch (e) { res.status(503).json({ error: e.message }); } });
 app.get("/api/youtube/callback", async (req, res) => { try { await saveYoutubeCode(String(req.query.code || "")); res.send("YouTube connected. You can close this page."); } catch (e) { res.status(400).send(e.message); } });
 app.get("/api/youtube/status", async (_req, res) => res.json(await youtubeStatus()));
