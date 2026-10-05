@@ -1,4 +1,8 @@
-# CryptoAI PRO — Android app (Sinhala + English crypto terminal)
+# AI Brain — Android app (Sinhala + English hosted AI assistant)
+
+This APK wraps the deployed AI Brain at `https://p1men83qhkg1-d.space-z.ai/` in a native Android WebView. It supports Sinhala, English and Singlish, with normal Android back navigation and external links opening in the browser.
+
+> The older crypto terminal implementation remains in the repository for reference; the Android launcher now opens AI Brain.
 
 A market/chart/signal/trading terminal inside a WebView shell: **markets dashboard, candlestick
 charts with EMA/Bollinger/volume/RSI, a rule-based signal engine, paper + live trading, an

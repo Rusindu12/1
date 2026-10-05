@@ -11,8 +11,8 @@ android {
         applicationId = "com.cryptoai.pro"
         minSdk = 24
         targetSdk = 34
-        versionCode = 49
-        versionName = "49.0"
+        versionCode = 50
+        versionName = "1.0"
     }
 
     buildTypes {

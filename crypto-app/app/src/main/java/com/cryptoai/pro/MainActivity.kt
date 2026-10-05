@@ -15,8 +15,14 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        // The hosted AI Brain is the app's home screen. Keeping this in one place
+        // also makes it easy to point a future release at a different deployment.
+        private const val HOME_URL = "https://p1men83qhkg1-d.space-z.ai/"
+        private const val HOME_HOST = "p1men83qhkg1-d.space-z.ai"
+    }
+
     lateinit var web: WebView
-    private lateinit var bridge: AndroidBridge
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,10 +65,12 @@ class MainActivity : AppCompatActivity() {
         }
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                val u = request.url.toString()
-                // keep the app itself inside the WebView; open external links in browser
-                return if (u.startsWith("https://appassets.androidplatform.net") || u.startsWith("file://")) false
-                else { try { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)) } catch (_: Exception) {}; true }
+                val uri = request.url
+                val isAppPage = uri.scheme == "https" && uri.host == HOME_HOST
+                // Keep the hosted AI Brain (including its internal routes) in the app;
+                // hand unrelated links to the user's browser.
+                return if (isAppPage || uri.scheme == "file" || uri.host == "appassets.androidplatform.net") false
+                else { try { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri)) } catch (_: Exception) {}; true }
             }
         }
 
