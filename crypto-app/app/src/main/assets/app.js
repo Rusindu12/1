@@ -1694,7 +1694,7 @@ async function livePlaceOrder(sym, side, qty, price, type) {
     if (!(q > 0) || q < (f.min || 0)) throw new Error("qty below exchange minimum (" + (f.min || f.step) + ")");
     if (f.max > 0 && q > f.max) throw new Error("qty above exchange maximum (" + f.max + ")");
     if (kind === "LIMIT" && !(px > 0)) throw new Error("limit price is below exchange tick size");
-    const notional = q * px;
+    let notional = q * px;
     if (f.minNotional > 0 && notional < f.minNotional) throw new Error("order value below exchange minimum (" + f.minNotional + ")");
 
     /* Last-second balance guard.  The UI's percentage buttons and the bot no
@@ -1710,7 +1710,19 @@ async function livePlaceOrder(sym, side, qty, price, type) {
     } else {
       const free = bal[base] ? Number(bal[base].free) || 0 : 0;
       if (q > free + (f.step || 0.000001) * 1.5) {
-        throw new Error("insufficient free " + base + " (need " + fmtQty(q) + ", have " + fmtQty(free) + ")");
+        /* Some exchanges charge a spot sell fee in the base asset.  Permit
+           only that tiny, bounded discrepancy and sell the exact free amount;
+           never silently over-sell a materially different balance. */
+        const feeSizedGap = q - free;
+        if (feeSizedGap > 0 && feeSizedGap <= q * 0.002) {
+          q = roundQty(free, f);
+          notional = q * px;
+        } else {
+          throw new Error("insufficient free " + base + " (need " + fmtQty(q) + ", have " + fmtQty(free) + ")");
+        }
+      }
+      if (!(q > 0) || (f.minNotional > 0 && notional < f.minNotional)) {
+        throw new Error("remaining " + base + " is below exchange minimum");
       }
     }
 
