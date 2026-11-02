@@ -20,6 +20,7 @@ abstract class Exchange(ctx: Context, val name: String) {
     fun saveKeys(key: String, secret: String, testnet: Boolean) {
         prefs.edit().putString("key", key.trim()).putString("secret", secret.trim()).putBoolean("testnet", testnet).apply()
     }
+    fun setTestnet(testnet: Boolean) = prefs.edit().putBoolean("testnet", testnet).apply()
     fun clearKeys() = prefs.edit().clear().apply()
 
     fun status(): String = JSONObject()

@@ -43,7 +43,12 @@ Notes:
 - If no exchange is reachable the app keeps working on clearly-labelled **simulated demo data**.
 - Live trading needs API keys with *trading* enabled and **withdrawal disabled**; requests are signed
   by the Kotlin bridge, so the secret never leaves the device (and never enters a web page).
-- Educational tool — not financial advice.
+- **v50 live hardening:** mainnet/testnet-aware exchange filters, correct Bybit quantity precision,
+  last-second free-balance/minimum checks, actual market-fill tracking, client-order IDs and
+  duplicate-order protection, persisted live positions, live daily P&L limits, signal-flip exits,
+  live position P&L/close UI, and balance reconciliation after restart or outside-device trades.
+- Educational tool — not financial advice. Live trading can lose money; test paper/testnet first.
+
 
 ## Verify the web layer locally
 

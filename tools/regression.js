@@ -263,5 +263,17 @@ t("v49: web system notifications", code["app.js"].includes("Notification.permiss
 t("v49: wake lock re-acquire on visible", code["app.js"].includes("visibilitychange"));
 t("v49: worker.js exists (assets + web)", fs.existsSync(path.join(A, "worker.js")) && fs.existsSync(path.join(A, "..", "..", "..", "..", "..", "web", "app", "worker.js")));
 
+// ===== v50: safer live execution =====
+t("v50: live books persist per account", code["app.js"].includes("liveBooks") && code["app.js"].includes("liveBookKey"));
+t("v50: live daily PnL drives bot guard", code["app.js"].includes("function tradingDayPnl") && code["app.js"].includes("const lossSinceStart = tradingDayPnl()"));
+t("v50: live max-position guard", code["app.js"].includes('state.settings.liveMode === "live"\n    ? (b.livePos || []).filter'));
+t("v50: live percentage uses exchange balance", code["app.js"].includes("liveBalances(true)") && !code["app.js"].includes("paper().bal * pct) / tk.last"));
+t("v50: actual fill quantity is tracked", code["app.js"].includes("Number(res.executedQty) || 0") && code["app.js"].includes("addLivePosition"));
+t("v50: Bybit decimal qty step is not exponent-misread", code["app.js"].includes("Number(x.qtyStep || x.basePrecision") && !code["app.js"].includes("Math.pow(10, -+x.basePrecision)"));
+t("v50: live order idempotency + in-flight guard", code["app.js"].includes("newClientOrderId") && code["app.js"].includes("orderLinkId") && code["app.js"].includes("liveInFlight"));
+t("v50: live position UI + close path", code["app.js"].includes("data-live-close") && code["app.js"].includes("closeLivePosition"));
+t("v50: live watchdog survives app close", code["app.js"].includes('bc("setAutoOn", true);           /* watchdog must survive app close/reboot */'));
+t("v50: testnet metadata uses signed exchange host", code["app.js"].includes("async function livePublic") && code["app.js"].includes('bc(ex + "Public"'));
+
 console.log(fails ? "\n"+fails+" FAILURES" : "\n🎉 ALL REGRESSION TESTS PASS");
 process.exit(fails?1:0);

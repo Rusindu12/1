@@ -57,6 +57,7 @@ class AndroidBridge(private val ctx: Context, private val activity: MainActivity
     // ---------- Binance ----------
     @JavascriptInterface fun binanceSaveKeys(key: String, secret: String) = binance.saveKeys(key, secret, binance.testnet)
     @JavascriptInterface fun binanceSaveKeys(key: String, secret: String, testnet: Boolean) = binance.saveKeys(key, secret, testnet)
+    @JavascriptInterface fun binanceSetTestnet(testnet: Boolean) = binance.setTestnet(testnet)
     @JavascriptInterface fun binanceClearKeys() = binance.clearKeys()
     @JavascriptInterface fun binanceStatus(): String = binance.status()
     @JavascriptInterface fun binanceHasKeys(): Boolean = binance.hasKeys
@@ -69,6 +70,7 @@ class AndroidBridge(private val ctx: Context, private val activity: MainActivity
     // ---------- Bybit ----------
     @JavascriptInterface fun bybitSaveKeys(key: String, secret: String) = bybit.saveKeys(key, secret, bybit.testnet)
     @JavascriptInterface fun bybitSaveKeys(key: String, secret: String, testnet: Boolean) = bybit.saveKeys(key, secret, testnet)
+    @JavascriptInterface fun bybitSetTestnet(testnet: Boolean) = bybit.setTestnet(testnet)
     @JavascriptInterface fun bybitClearKeys() = bybit.clearKeys()
     @JavascriptInterface fun bybitStatus(): String = bybit.status()
     @JavascriptInterface fun bybitHasKeys(): Boolean = bybit.hasKeys

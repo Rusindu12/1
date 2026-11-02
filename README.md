@@ -35,7 +35,9 @@ web/                      # මේ තමයි ඒ terminal එකම web versi
 - 📚 **Huntraders book knowledge (v38)** — huntraders.com/books වල public pattern definitions (candlestick 24 + chart patterns 8, book reliability ratings High/Moderate/Low සමඟ) detection engine එකක් විදිහට encode කරලා brain එකට feed කරනවා. Book ratings = starting priors විතරයි — live outcomes මොනවා actually pay කරන්නේද කියලා brain එක තමන්ම ඉගෙන ගන්නවා.
 - Exchange එකක් reach කරන්න බැරි වුණොත් clearly-labelled **simulated demo data** වලින් වැඩ කරනවා.
 - Live trading සඳහා: trading-enabled, **withdrawal-disabled** API keys — secret එක phone එකෙන් පිටවෙන්නේ නෑ.
-- ⚠️ Educational tool — financial advice එකක් නෙවෙයි.
+- **Live trading v50 hardening:** exchange/testnet-specific quantity and price filters, correct Bybit precision, last-second free-balance checks, actual fill price/quantity tracking, duplicate-order guards, persisted live positions, live P&L daily brake, flip exits, and a live-position close/reconciliation view.
+- ⚠️ Educational tool — financial advice එකක් නෙවෙයි. Live trading can lose money; testnet/paper mode එකෙන් පටන් ගන්න.
+
 
 ## 📱 APK
 
